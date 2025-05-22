@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Transfer Data</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+    <script th:src="@{/js/jquery.min.js}"></script>
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h4 class="text-center mb-4">Transfer Data</h4>
+
+            <div id="alertBox" class="alert d-none" role="alert"></div>
+
+            <form id="transferForm">
+                <div class="mb-3">
+                    <label for="id" class="form-label">Enter ID:</label>
+                    <input type="number" class="form-control" id="id" name="id" placeholder="Enter ID" required>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary" id="transferButton">Transfer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Optional Spinner -->
+<div id="spinner" class="d-none text-center mt-3">
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Transferring...</span>
+    </div>
+</div>
+</body>
+</html>

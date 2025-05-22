@@ -1,0 +1,71 @@
+<!-- settings.html -->
+<div class="container mt-4">
+    <h5>Database Configuration</h5>
+    <form id="settingsForm">
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" id="username" name="username" class="form-control" required />
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" id="password" name="password" class="form-control" required />
+        </div>
+        <div class="mb-3">
+            <label for="dbname" class="form-label">Database Name</label>
+            <input type="text" id="dbname" name="dbname" class="form-control" required />
+        </div>
+        <div class="d-flex">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <button type="button" class="btn btn-danger ms-2" id="resetConfigBtn">Reset Config</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function getQueryParams() {
+        const params = {};
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        for (const [key, value] of urlParams) {
+            params[key] = value;
+        }
+        return params;
+    }
+
+    $(document).ready(function () {
+        // ⬇️ Autofill the form if URL contains query params
+        const queryParams = getQueryParams();
+        if (queryParams.username) $("#username").val(queryParams.username);
+        if (queryParams.password) $("#password").val(queryParams.password);
+        if (queryParams.dbname) $("#dbname").val(queryParams.dbname);
+
+        // 🧾 Form Submit
+        $("#settingsForm").on("submit", function (e) {
+            e.preventDefault();
+            const configData = {
+                username: $("#username").val(),
+                password: $("#password").val(),
+                dbName: $("#dbname").val()
+            };
+            fetch("/api/config/create-db", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(configData)
+            })
+            .then(response => response.text())
+            .then(msg => alert("✅ " + msg))
+            .catch(err => alert("❌ Error saving config: " + err));
+        });
+
+        // 🧹 Reset Config
+        $("#resetConfigBtn").on("click", function () {
+            fetch("/api/config/reset-db", { method: "POST" })
+                .then(response => response.text())
+                .then(msg => Swal.fire({ icon: 'warning', title: 'Reset Config', text: msg }))
+                .catch(err => Swal.fire({ icon: 'error', title: 'Error', text: 'Error resetting config: ' + err }));
+        });
+    });
+
+</script>

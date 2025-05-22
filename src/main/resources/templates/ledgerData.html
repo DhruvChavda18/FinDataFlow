@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ledger List</title>
+
+    <!-- Bootstrap & DataTables CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        #ledgerTable {
+            min-width: 1800px;
+    
+        }
+
+        .table-responsive::-webkit-scrollbar {
+            height: 6px;
+        }
+        .dt-buttons {
+            display: flex !important;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: #bbb;
+            border-radius: 4px;
+        }
+
+        #exportButtonsContainer .dt-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .dt-button {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .dt-button.buttons-excel {
+            background-color: #28a745 !important;
+            color: white !important;
+            border-color: #28a745 !important;
+        }
+
+        .dt-button.buttons-excel:hover {
+            background-color: #218838 !important;
+            border-color: #1e7e34 !important;
+        }
+
+        .edit-btn {
+            cursor: pointer;
+            color: #0d6efd;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .edit-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        /* Inline editing styles */
+        .editable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .editable:hover {
+            background-color: #f8f9fa;
+        }
+
+        .editable:after {
+            content: "✎";
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .editable:hover:after {
+            opacity: 1;
+        }
+
+        /* Hide pencil icon for Group ID and SubGroup ID columns */
+        #ledgerTable td:nth-child(3):after,
+        #ledgerTable td:nth-child(5):after {
+            display: none !important;
+        }
+
+        .editing {
+            background-color: #fff3cd !important;
+        }
+
+        .editable-input {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .editable-select {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .wizard {
+            margin: 20px 0;
+        }
+        .wizard-progress {
+            margin-bottom: 30px;
+        }
+        .wizard .nav-pills {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .wizard .nav-pills .nav-link {
+            padding: 8px 15px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+        .wizard .nav-pills .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+        .wizard .progress {
+            height: 4px;
+            margin-bottom: 10px;
+        }
+        .tab-pane {
+            padding: 20px 0;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .form-label:after {
+            content: " *";
+            color: red;
+            display: none;
+        }
+        .form-label[for]:has(+ input[required]):after,
+        .form-label[for]:has(+ select[required]):after {
+            display: inline;
+        }
+    </style>
+
+
+</head>
+<body>
+<div class="container mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Ledger Records</h4>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLedgerModal">
+            Add New Ledger
+        </button>
+    </div>
+    <div id="exportButtonsContainer" class="d-flex gap-2 mt-3"></div>
+    <div class="table-responsive mb-5" style="overflow-x: auto; ">
+        <div style="min-width: 1800px;">
+            <div class="row mt-3 mb-3 ms-3">
+                <div class="col-md-3 d-flex flex-wrap" style="gap: 10px;">
+                    <input type="text" id="ledgerNameSearch" class="form-control" placeholder="Search Ledger Name">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="groupNameSearch" class="form-control" placeholder="Search Group Name">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="subGroupNameSearch" class="form-control" placeholder="Search SubGroup Name">
+                </div>
+                <div class="col-md-3">
+                    <select id="apVersionDropdown" class="form-control">
+                        <option value="">All AP Versions</option>
+                        <option th:each="ap : ${apVersions}" th:value="${ap}" th:text="${ap}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <table id="ledgerTable" class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Ledger Name</th>
+                    <th>Group ID</th>
+                    <th>Group Name</th>
+                    <th>SubGroup ID</th>
+                    <th>SubGroup Name</th>
+                    <th>Created Date</th>
+                    <th>Is Active</th>
+                    <th>Is Deleted</th>
+                    <th>Updated Date</th>
+                    <th>Version</th>
+                    <th>Code</th>
+                    <th>Is Group</th>
+                    <th>Is Ledger</th>
+                    <th>Is SubGroup</th>
+                    <th>Created By</th>
+                    <th>Updated By</th>
+                    <th>Ledger Type ID</th>
+                    <th>Parent ID</th>
+                    <th>Menu ID</th>
+                    <th>Serial Number</th>
+                    <th>Formula</th>
+                    <th>Is Editable</th>
+                    <th>Depreciation Ledger ID</th>
+                    <th>Accumulated Depreciation ID</th>
+                    <th>Is Optional</th>
+                    <th>AP Version</th>
+                    <th>FSA Area ID</th>
+                    <th>Ledger Header</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="ledger : ${ledgers}">
+                    <td>
+                        <span th:text="${ledger.id}"></span>
+                        <i class="fas fa-pencil-alt edit-btn" th:data-id="${ledger.id}"></i>
+                    </td>
+                    <td th:text="${ledger.ledgerName}"></td>
+                    <td th:text="${ledger.groupId}"></td>
+                    <td th:text="${ledger.groupName}"></td>
+                    <td th:text="${ledger.subGroupId}"></td>
+                    <td th:text="${ledger.subGroupName}"></td>
+                    <td th:text="${ledger.createdDate}"></td>
+                    <td th:text="${ledger.isActive}"></td>
+                    <td th:text="${ledger.isDeleted}"></td>
+                    <td th:text="${ledger.updatedDate}"></td>
+                    <td th:text="${ledger.version}"></td>
+                    <td th:text="${ledger.code}"></td>
+                    <td th:text="${ledger.isGroup}"></td>
+                    <td th:text="${ledger.isLedger}"></td>
+                    <td th:text="${ledger.isSubGroup}"></td>
+                    <td th:text="${ledger.createdBy}"></td>
+                    <td th:text="${ledger.updatedBy}"></td>
+                    <td th:text="${ledger.ledgerTypeId}"></td>
+                    <td th:text="${ledger.parentId}"></td>
+                    <td th:text="${ledger.tbMenuId}"></td>
+                    <td th:text="${ledger.serialNumber}"></td>
+                    <td th:text="${ledger.formula}"></td>
+                    <td th:text="${ledger.isEditable}"></td>
+                    <td th:text="${ledger.depreciationLedgerId}"></td>
+                    <td th:text="${ledger.accumulatedDepreciationId}"></td>
+                    <td th:text="${ledger.isOptional}"></td>
+                    <td th:text="${ledger.apVersion}"></td>
+                    <td th:text="${ledger.fsaAreaId}"></td>
+                    <td th:text="${ledger.ledgerHeader}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add New Ledger Modal -->
+    <div class="modal fade" id="addLedgerModal" tabindex="-1" aria-labelledby="addLedgerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addLedgerModalLabel">Add New Ledgerr</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="wizard">
+                        <div class="wizard-progress">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <ul class="nav nav-pills">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#step1" data-bs-toggle="pill">Basic Info</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#step2" data-bs-toggle="pill">Type & Status</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#step3" data-bs-toggle="pill">Additional Info</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="tab-content">
+                            <!-- Step 1: Basic Information -->
+                            <div class="tab-pane fade show active" id="step1">
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label for="ledgerName" class="form-label">Ledger Name</label>
+                                        <input type="text" class="form-control" id="ledgerName">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="code" class="form-label">Code</label>
+                                        <input type="text" class="form-control" id="code" maxlength="16">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="groupSelect" class="form-label">Group</label>
+                                        <select class="form-select" id="groupSelect">
+                                            <option value="">Select Group</option>
+                                            <option th:each="group : ${groups}" th:value="${group.id}" th:text="${group.ledgerName}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="subGroupSelect" class="form-label">Subgroup</label>
+                                        <select class="form-select" id="subGroupSelect">
+                                            <option value="">Select Subgroup</option>
+                                            <option th:each="subgroup : ${subgroups}" th:value="${subgroup.id}" th:text="${subgroup.ledgerName}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="version" class="form-label">Version</label>
+                                        <input type="number" class="form-control" id="version">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="apVersion" class="form-label">AP Version</label>
+                                        <input type="number" class="form-control" id="apVersion">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="ledgerHeader" class="form-label">Ledger Header</label>
+                                        <input type="text" class="form-control" id="ledgerHeader" maxlength="100">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Type & Status -->
+                            <div class="tab-pane fade" id="step2">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="isActive" class="form-label">Is Active</label>
+                                        <select class="form-select" id="isActive">
+                                            <option value="true" selected>Yes</option>
+                                            <option value="false">No</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="isDeleted" class="form-label">Is Deleted</label>
+                                        <select class="form-select" id="isDeleted">
+                                            <option value="false" selected>No</option>
+                                            <option value="true">Yes</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Is Group</label>
+                                        <div class="d-flex gap-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="isGroup" id="isGroupYes" value="true">
+                                                <label class="form-check-label" for="isGroupYes">Yes</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="isGroup" id="isGroupNo" value="false" checked>
+                                                <label class="form-check-label" for="isGroupNo">No</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Is Ledger</label>
+                                        <div class="d-flex gap-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="isLedger" id="isLedgerYes" value="true" checked>
+                                                <label class="form-check-label" for="isLedgerYes">Yes</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="isLedger" id="isLedgerNo" value="false">
+                                                <label class="form-check-label" for="isLedgerNo">No</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Is SubGroup</label>
+                                        <div class="d-flex gap-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="isSubGroup" id="isSubGroupYes" value="true">
+                                                <label class="form-check-label" for="isSubGroupYes">Yes</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="isSubGroup" id="isSubGroupNo" value="false" checked>
+                                                <label class="form-check-label" for="isSubGroupNo">No</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="isEditable" class="form-label">Is Editable</label>
+                                        <select class="form-select" id="isEditable">
+                                            <option value="true" selected>Yes</option>
+                                            <option value="false">No</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="isOptional" class="form-label">Is Optional</label>
+                                        <select class="form-select" id="isOptional">
+                                            <option value="false" selected>No</option>
+                                            <option value="true">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Additional Information -->
+                            <div class="tab-pane fade" id="step3">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="createdBy" class="form-label">Created By</label>
+                                        <input type="number" class="form-control" id="createdBy">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="updatedBy" class="form-label">Updated By</label>
+                                        <input type="number" class="form-control" id="updatedBy">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="createdDate" class="form-label">Created Date</label>
+                                        <input type="datetime-local" class="form-control" id="createdDate" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="updatedDate" class="form-label">Updated Date</label>
+                                        <input type="datetime-local" class="form-control" id="updatedDate" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="ledgerTypeId" class="form-label">Ledger Type ID</label>
+                                        <input type="number" class="form-control" id="ledgerTypeId">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="parentId" class="form-label">Parent ID</label>
+                                        <input type="number" class="form-control" id="parentId">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="tbMenuId" class="form-label">Menu ID</label>
+                                        <input type="number" class="form-control" id="tbMenuId">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="serialNumber" class="form-label">Serial Number</label>
+                                        <input type="number" class="form-control" id="serialNumber">
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label for="formula" class="form-label">Formula</label>
+                                        <input type="text" class="form-control" id="formula">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="depreciationLedgerId" class="form-label">Depreciation Ledger ID</label>
+                                        <input type="number" class="form-control" id="depreciationLedgerId">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="accumulatedDepreciationId" class="form-label">Accumulated Depreciation ID</label>
+                                        <input type="number" class="form-control" id="accumulatedDepreciationId">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="fsaAreaId" class="form-label">FSA Area ID</label>
+                                        <input type="number" class="form-control" id="fsaAreaId">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">Previous</button>
+                    <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
+                    <button type="button" class="btn btn-success" id="saveLedgerBtn" style="display: none;">Save Ledger</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- All DataTables, jQuery, and Bootstrap scripts are now loaded only in index.html -->
+    <script>
+        $(document).ready(function() {
+            // Only keep the wizard functionality here
+            let currentStep = 1;
+            const totalSteps = 3;
+
+            function updateWizardUI() {
+                // Update progress bar
+                const progress = (currentStep / totalSteps) * 100;
+                $('.progress-bar').css('width', progress + '%');
+
+                // Update navigation pills
+                $('.nav-pills .nav-link').removeClass('active');
+                $(`.nav-pills .nav-link[href="#step${currentStep}"]`).addClass('active');
+
+                // Update tab content
+                $('.tab-pane').removeClass('show active');
+                $(`#step${currentStep}`).addClass('show active');
+
+                // Update buttons
+                $('#prevBtn').toggle(currentStep > 1);
+                $('#nextBtn').toggle(currentStep < totalSteps);
+                $('#saveLedgerBtn').toggle(currentStep === totalSteps);
+            }
+
+            $('#nextBtn').click(function() {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateWizardUI();
+                }
+            });
+
+            $('#prevBtn').click(function() {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateWizardUI();
+                }
+            });
+
+            // Initialize wizard UI
+            updateWizardUI();
+
+            // Handle ledger type selection
+            $('input[name="ledgerType"]').change(function() {
+                const selectedType = $(this).val();
+                const groupSelect = $('#groupSelect');
+                const subGroupSelect = $('#subGroupSelect');
+                
+                // Reset all type flags
+                $('#isGroupYes').prop('checked', false);
+                $('#isGroupNo').prop('checked', true);
+                $('#isSubGroupYes').prop('checked', false);
+                $('#isSubGroupNo').prop('checked', true);
+                $('#isLedgerYes').prop('checked', false);
+                $('#isLedgerNo').prop('checked', true);
+                
+                // Update type flags based on selection
+                switch(selectedType) {
+                    case 'group':
+                        $('#isGroupYes').prop('checked', true);
+                        $('#isGroupNo').prop('checked', false);
+                        groupSelect.prop('disabled', true);
+                        subGroupSelect.prop('disabled', true);
+                        break;
+                    case 'subgroup':
+                        $('#isSubGroupYes').prop('checked', true);
+                        $('#isSubGroupNo').prop('checked', false);
+                        groupSelect.prop('disabled', false);
+                        subGroupSelect.prop('disabled', true);
+                        break;
+                    case 'ledger':
+                        $('#isLedgerYes').prop('checked', true);
+                        $('#isLedgerNo').prop('checked', false);
+                        groupSelect.prop('disabled', false);
+                        subGroupSelect.prop('disabled', false);
+                        break;
+                }
+            });
+
+            // Handle group selection to filter subgroups
+            $('#groupSelect').change(function() {
+                const selectedGroupId = $(this).val();
+                const subGroupSelect = $('#subGroupSelect');
+                
+                if (selectedGroupId) {
+                    // Filter subgroups based on selected group
+                    subGroupSelect.find('option').each(function() {
+                        const subgroup = $(this);
+                        if (subgroup.val() === '') return; // Skip the default option
+                        
+                        // Show only subgroups that belong to the selected group
+                        const parentId = subgroup.data('parent-id');
+                        subgroup.toggle(parentId === selectedGroupId);
+                    });
+                } else {
+                    // Show all subgroups if no group is selected
+                    subGroupSelect.find('option').show();
+                }
+            });
+
+            // Update form data before submission
+            $('#saveLedgerBtn').click(function() {
+                const formData = {
+                    ledgerName: $('#ledgerName').val(),
+                    code: $('#code').val(),
+                    version: $('#version').val(),
+                    apVersion: $('#apVersion').val(),
+                    ledgerHeader: $('#ledgerHeader').val(),
+                    isActive: $('#isActive').val() === 'true',
+                    isDeleted: $('#isDeleted').val() === 'true',
+                    isGroup: $('#isGroupYes').is(':checked'),
+                    isLedger: $('#isLedgerYes').is(':checked'),
+                    isSubGroup: $('#isSubGroupYes').is(':checked'),
+                    isEditable: $('#isEditable').val() === 'true',
+                    isOptional: $('#isOptional').val() === 'true',
+                    createdBy: $('#createdBy').val(),
+                    updatedBy: $('#updatedBy').val(),
+                    ledgerTypeId: $('#ledgerTypeId').val(),
+                    tbMenuId: $('#tbMenuId').val(),
+                    serialNumber: $('#serialNumber').val(),
+                    formula: $('#formula').val(),
+                    depreciationLedgerId: $('#depreciationLedgerId').val(),
+                    accumulatedDepreciationId: $('#accumulatedDepreciationId').val(),
+                    fsaAreaId: $('#fsaAreaId').val()
+                };
+
+                // Handle parent ID based on ledger type and selections
+                const selectedType = $('input[name="ledgerType"]:checked').val();
+                const selectedGroupId = $('#groupSelect').val();
+                const selectedSubGroupId = $('#subGroupSelect').val();
+
+                if (selectedType === 'group') {
+                    formData.parentId = null; // Groups don't have parents
+                } else if (selectedType === 'subgroup') {
+                    formData.parentId = selectedGroupId; // Subgroups have groups as parents
+                } else if (selectedType === 'ledger') {
+                    formData.parentId = selectedSubGroupId || selectedGroupId; // Ledgers have subgroups as parents, or groups if no subgroup
+                }
+
+                // Make AJAX call to create ledger
+                $.ajax({
+                    url: '/api/ledger/create',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Ledger created successfully!',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                $('#addLedgerModal').modal('hide');
+                                loadLedgerData(); // Reload the table
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Creation failed: ' + (response.message || 'Unknown error')
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Creation failed: ' + (xhr.responseJSON?.message || error)
+                        });
+                    }
+                });
+            });
+
+            $('#ledgerTable').on('click', '.edit-btn', function() {
+                const ledgerId = $(this).data('id');
+                const row = $(this).closest('tr');
+                
+                // Clone the add ledger modal
+                const editModal = $('#addLedgerModal').clone();
+                editModal.attr('id', 'editLedgerModal');
+                editModal.find('.modal-title').text('Edit Ledger');
+                
+                // Initialize wizard functionality for the edit modal
+                let currentStep = 1;
+                const totalSteps = 3;
+
+                function updateWizardUI() {
+                    // Update progress bar
+                    const progress = (currentStep / totalSteps) * 100;
+                    editModal.find('.progress-bar').css('width', progress + '%');
+
+                    // Update navigation pills
+                    editModal.find('.nav-pills .nav-link').removeClass('active');
+                    editModal.find(`.nav-pills .nav-link[href="#step${currentStep}"]`).addClass('active');
+
+                    // Update tab content
+                    editModal.find('.tab-pane').removeClass('show active');
+                    editModal.find(`#step${currentStep}`).addClass('show active');
+
+                    // Update buttons
+                    editModal.find('#prevBtn').toggle(currentStep > 1);
+                    editModal.find('#nextBtn').toggle(currentStep < totalSteps);
+                    editModal.find('#saveLedgerBtn').toggle(currentStep === totalSteps);
+                }
+
+                // Bind next button
+                editModal.find('#nextBtn').off().on('click', function() {
+                    if (currentStep < totalSteps) {
+                        currentStep++;
+                        updateWizardUI();
+                    }
+                });
+
+                // Bind previous button
+                editModal.find('#prevBtn').off().on('click', function() {
+                    if (currentStep > 1) {
+                        currentStep--;
+                        updateWizardUI();
+                    }
+                });
+
+                // Initialize wizard UI
+                updateWizardUI();
+                
+                // Populate form fields with row data
+                // Basic Info (Step 1)
+                editModal.find('#ledgerName').val(row.find('td:eq(1)').text()); // Ledger Name
+                editModal.find('#code').val(row.find('td:eq(11)').text()); // Code
+                editModal.find('#version').val(row.find('td:eq(10)').text()); // Version
+                editModal.find('#apVersion').val(row.find('td:eq(26)').text()); // AP Version
+                editModal.find('#ledgerHeader').val(row.find('td:eq(28)').text()); // Ledger Header
+
+                // Set group and subgroup selections
+                const groupId = row.find('td:eq(2)').text();
+                const subGroupId = row.find('td:eq(4)').text();
+                if (groupId) {
+                    editModal.find('#groupSelect').val(groupId);
+                }
+                if (subGroupId) {
+                    editModal.find('#subGroupSelect').val(subGroupId);
+                }
+
+                // Type & Status (Step 2)
+                const isActive = row.find('td:eq(7)').text().toLowerCase() === 'true';
+                const isDeleted = row.find('td:eq(8)').text().toLowerCase() === 'true';
+                const isGroup = row.find('td:eq(12)').text().toLowerCase() === 'true';
+                const isLedger = row.find('td:eq(13)').text().toLowerCase() === 'true';
+                const isSubGroup = row.find('td:eq(14)').text().toLowerCase() === 'true';
+                const isEditable = row.find('td:eq(22)').text().toLowerCase() === 'true';
+                const isOptional = row.find('td:eq(25)').text().toLowerCase() === 'true';
+
+                editModal.find('#isActive').val(isActive.toString());
+                editModal.find('#isDeleted').val(isDeleted.toString());
+                editModal.find('#isGroupYes').prop('checked', isGroup);
+                editModal.find('#isGroupNo').prop('checked', !isGroup);
+                editModal.find('#isLedgerYes').prop('checked', isLedger);
+                editModal.find('#isLedgerNo').prop('checked', !isLedger);
+                editModal.find('#isSubGroupYes').prop('checked', isSubGroup);
+                editModal.find('#isSubGroupNo').prop('checked', !isSubGroup);
+                editModal.find('#isEditable').val(isEditable.toString());
+                editModal.find('#isOptional').val(isOptional.toString());
+
+                // Additional Info (Step 3)
+                editModal.find('#createdBy').val(row.find('td:eq(15)').text()); // Created By
+                editModal.find('#updatedBy').val(row.find('td:eq(16)').text()); // Updated By
+                
+                // Format dates for datetime-local input
+                const createdDate = new Date(row.find('td:eq(6)').text());
+                const updatedDate = new Date(row.find('td:eq(9)').text());
+                editModal.find('#createdDate').val(createdDate.toISOString().slice(0, 16));
+                editModal.find('#updatedDate').val(updatedDate.toISOString().slice(0, 16));
+                
+                editModal.find('#ledgerTypeId').val(row.find('td:eq(17)').text()); // Ledger Type ID
+                editModal.find('#parentId').val(row.find('td:eq(18)').text()); // Parent ID
+                editModal.find('#tbMenuId').val(row.find('td:eq(19)').text()); // Menu ID
+                editModal.find('#serialNumber').val(row.find('td:eq(20)').text()); // Serial Number
+                editModal.find('#formula').val(row.find('td:eq(21)').text()); // Formula
+                editModal.find('#depreciationLedgerId').val(row.find('td:eq(23)').text()); // Depreciation Ledger ID
+                editModal.find('#accumulatedDepreciationId').val(row.find('td:eq(24)').text()); // Accumulated Depreciation ID
+                editModal.find('#fsaAreaId').val(row.find('td:eq(27)').text()); // FSA Area ID
+
+                // Add mutual exclusivity: when one Yes is selected, others become No
+                editModal.find('input[name="isGroup"], input[name="isSubGroup"], input[name="isLedger"]').change(function() {
+                    if ($(this).val() === 'true' && $(this).is(':checked')) {
+                        if ($(this).attr('name') === 'isGroup') {
+                            editModal.find('#isSubGroupNo, #isLedgerNo').prop('checked', true);
+                        } else if ($(this).attr('name') === 'isSubGroup') {
+                            editModal.find('#isGroupNo, #isLedgerNo').prop('checked', true);
+                        } else if ($(this).attr('name') === 'isLedger') {
+                            editModal.find('#isGroupNo, #isSubGroupNo').prop('checked', true);
+                        }
+                    }
+                });
+
+                // Update save button to handle edit
+                editModal.find('#saveLedgerBtn').off().on('click', function() {
+                    const now = new Date();
+                    function getValueOrNull(selector) {
+                        const val = editModal.find(selector).val();
+                        return val === '' ? null : val;
+                    }
+
+                    const formData = {
+                        id: ledgerId,
+                        ledgerName: getValueOrNull('#ledgerName'),
+                        code: getValueOrNull('#code'),
+                        version: getValueOrNull('#version'),
+                        apVersion: getValueOrNull('#apVersion'),
+                        ledgerHeader: getValueOrNull('#ledgerHeader'),
+                        isActive: editModal.find('#isActive').val() === 'true',
+                        isDeleted: editModal.find('#isDeleted').val() === 'true',
+                        isGroup: editModal.find('#isGroupYes').is(':checked'),
+                        isLedger: editModal.find('#isLedgerYes').is(':checked'),
+                        isSubGroup: editModal.find('#isSubGroupYes').is(':checked'),
+                        isEditable: editModal.find('#isEditable').val() === 'true',
+                        isOptional: editModal.find('#isOptional').val() === 'true',
+                        createdBy: getValueOrNull('#createdBy'),
+                        updatedBy: getValueOrNull('#updatedBy'),
+                        ledgerTypeId: getValueOrNull('#ledgerTypeId'),
+                        parentId: getValueOrNull('#parentId'),
+                        tbMenuId: getValueOrNull('#tbMenuId'),
+                        serialNumber: getValueOrNull('#serialNumber'),
+                        formula: getValueOrNull('#formula'),
+                        depreciationLedgerId: getValueOrNull('#depreciationLedgerId'),
+                        accumulatedDepreciationId: getValueOrNull('#accumulatedDepreciationId'),
+                        fsaAreaId: getValueOrNull('#fsaAreaId'),
+                        createdDate: row.find('td:eq(6)').text(), // Keep original created date
+                        updatedDate: now.toISOString() // Set current date/time for updated date
+                    };
+
+                    // Make AJAX call to update ledger
+                    $.ajax({
+                        url: '/api/ledger/update',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(formData),
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Ledger updated successfully!',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    editModal.modal('hide');
+                                    location.reload(); // Reload the page to show updated data
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: 'Update failed: ' + (response.message || 'Unknown error')
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Update failed: ' + (xhr.responseJSON?.message || error)
+                            });
+                        }
+                    });
+                });
+
+                // Show the modal
+                editModal.modal('show');
+            });
+        });
+    </script>
+
+
+</body>
+</html>

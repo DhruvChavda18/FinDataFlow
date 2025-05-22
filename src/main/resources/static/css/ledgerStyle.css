@@ -1,0 +1,35 @@
+@charset "UTF-8";
+
+#downloadBtn {
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 10px 20px;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.4);
+}
+
+#downloadBtn:hover {
+    background-color: #0056b3; /* Dark Blue */
+    transform: scale(1.05);
+}
+
+.spinner {
+    display: none;
+    margin-left: 10px;
+    width: 16px;
+    height: 16px;
+    border: 2px solid white;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+#ledgerTable{
+	font-size: 16px;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <title>Import-Export Data</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <!-- Favicon -->
+    <link th:href="@{/img/favicon.ico}" rel="icon">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
+
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Libraries -->
+    <link th:href="@{/lib/owlcarousel/assets/owl.carousel.min.css}" rel="stylesheet">
+    <link th:href="@{/lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css}" rel="stylesheet"/>
+
+    <!-- Bootstrap and Custom CSS -->
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.5/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* Prevent whole-page scroll */
+        }
+
+        .container-xxl {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .content {
+            overflow: auto; /* Add this to make content scrollable */
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            overflow-y: auto; /* Scroll only if sidebar content overflows */
+            flex-shrink: 0;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
+
+        #mainContent {
+            overflow-x: auto;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 20px;
+            min-height: 0;
+            white-space: nowrap; /* Important for horizontal scrolling */
+        }
+
+        #mainContent > div {
+            display: inline-block; /* Ensures it expands horizontally */
+            min-width: 100%;
+        }
+
+        /* Inline editing styles */
+        .editable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .editable:hover {
+            background-color: #f8f9fa;
+        }
+
+        .editable:after {
+            content: "✎";
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .editable:hover:after {
+            opacity: 1;
+        }
+
+        .editing {
+            background-color: #fff3cd !important;
+        }
+
+        .editable-input {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .editable-select {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        /* Spinner styles */
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            pointer-events: none;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: #0d6efd;
+            border-width: 0.25em;
+        }
+
+        .loading-message {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: #0d6efd;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .d-none {
+            display: none !important;
+        }
+
+        /* Excel Button Styles */
+        .dt-button.buttons-excel {
+            background-color: #28a745 !important;
+            color: white !important;
+            border-color: #28a745 !important;
+        }
+
+        .dt-button.buttons-excel:hover {
+            background-color: #218838 !important;
+            border-color: #1e7e34 !important;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Page Wrapper -->
+<div class="container-xxl position-relative bg-white d-flex p-0">
+
+    <!-- Sidebar -->
+    <div class="sidebar pe-4 pb-3">
+        <nav class="navbar bg-light navbar-light d-flex flex-column h-100">
+            <div class="d-flex align-items-center ms-4 mb-4">
+                <div class="position-relative">
+                    <img class="rounded-circle" th:src="@{/img/user.jpg}" alt="" style="width: 40px; height: 40px;">
+                    <div class="bg-success rounded-circle border border-2 border-white position-absolute end-0 bottom-0 p-1"></div>
+                </div>
+                <div class="ms-3">
+                    <h6 class="mb-0">John Doe</h6>
+                    <span>Adminnn</span>
+                </div>
+            </div>
+            <div class="navbar-nav w-100 flex-grow-1">
+                <a href="#" id="loadLedgerData" class="nav-item nav-link">
+                    <i class="fa fa-book me-2"></i>Ledger Data
+                </a>
+                <a href="#" id="loadTransferData" class="nav-item nav-link">
+                    <i class="fa fa-exchange-alt me-2"></i>Transfer Data
+                </a>
+            </div>
+            <div class="navbar-nav w-100">
+                <a href="#" id="loadSettings" class="nav-item nav-link">
+                    <i class="fa fa-cog me-2"></i>Settings
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content">
+
+        <!-- Spinner -->
+        <div id="spinner" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.9); z-index: 99999;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                <div class="spinner-border text-primary" style="width: 3rem; height: 3rem; border-width: 0.25em;" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div style="margin-top: 1rem; font-size: 1.2rem; color: #0d6efd; font-weight: 500;">
+                    It will take a moment, please wait...
+                </div>
+            </div>
+        </div>
+
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand bg-light navbar-light sticky-top px-4 py-0">
+            <a th:href="@{/}" class="navbar-brand d-flex d-lg-none me-4">
+                <h2 class="text-primary mb-0"><i class="fa fa-hashtag"></i></h2>
+            </a>
+            <a href="#" class="sidebar-toggler flex-shrink-0">
+                <i class="fa fa-bars"></i>
+            </a>
+            <div class="navbar-nav align-items-center ms-auto">
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                        <img class="rounded-circle me-lg-2" th:src="@{/img/user.jpg}" alt=""
+                             style="width: 40px; height: 40px;">
+                        <span class="d-none d-lg-inline-flex">John Doe</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
+                        <a href="#" class="dropdown-item">My Profile</a>
+                        <a href="#" class="dropdown-item">Settings</a>
+                        <a href="#" class="dropdown-item">Log Out</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div id="mainContent" class="p-4">
+            <div id="defaultContent">
+                <h3>Welcome to Dashboard</h3>
+                <p>This is the default content.</p>
+            </div>
+            <div id="loadingMessage" class="alert alert-info d-none" role="alert">
+                <i class="fas fa-spinner fa-spin me-2"></i>
+                It will take a moment, please wait...
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <!-- <div class="container-fluid pt-4 px-4">
+            <div class="bg-light rounded-top p-4">
+                <div class="row">
+                    <div class="col-12 col-sm-6 text-center text-sm-start">
+                        &copy; <a href="#">Your Site Name</a>, All Right Reserved.
+                    </div>
+                    <div class="col-12 col-sm-6 text-center text-sm-end">
+                        Designed By <a href="https://htmlcodex.com">HTML Codex</a><br>
+                        Distributed By <a class="border-bottom" href="https://themewagon.com"
+                                          target="_blank">ThemeWagon</a>
+                    </div>
+                </div>
+            </div>
+        </div> -->
+
+    </div>
+</div>
+<!-- Scripts -->
+<!-- jQuery should always be FIRST -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap JS (bundle includes Popper.js) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- DataTables Core -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- DataTables Buttons -->
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+
+<!-- DataTables Export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+<!-- Other Libraries -->
+<script th:src="@{/lib/chart/chart.min.js}"></script>
+<script th:src="@{/lib/easing/easing.min.js}"></script>
+<script th:src="@{/lib/waypoints/waypoints.min.js}"></script>
+<script th:src="@{/lib/owlcarousel/owl.carousel.min.js}"></script>
+<script th:src="@{/lib/tempusdominus/js/moment.min.js}"></script>
+<script th:src="@{/lib/tempusdominus/js/moment-timezone.min.js}"></script>
+<script th:src="@{/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js}"></script>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.5/dist/sweetalert2.all.min.js"></script>
+
+<!-- Your Custom JS -->
+<script th:src="@{/js/main.js}"></script>
+
+<script>
+    $(document).ready(function () {
+        // Show loading message
+        function showLoading() {
+            $('#defaultContent').hide();
+            $('#loadingMessage').removeClass('d-none');
+        }
+
+        // Hide loading message
+        function hideLoading() {
+            $('#loadingMessage').addClass('d-none');
+            $('#defaultContent').show();
+        }
+
+        // Load Ledger Page
+        function loadLedgerData() {
+            showLoading();
+            $('#mainContent').html('<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading ledger data...</p></div>');
+
+            // Update the URL without reloading the page
+            window.history.pushState({}, '', '/ledgers');
+
+            // Destroy any existing DataTable instance before loading new HTML
+            if ($.fn.DataTable.isDataTable('#ledgerTable')) {
+                $('#ledgerTable').DataTable().destroy();
+            }
+
+            fetch("/ledgers")
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.text();
+                })
+                .then(html => {
+                    // Clear existing content first
+                    $('#mainContent').empty();
+                    
+                    // Add the new HTML content
+                    $('#mainContent').html(html);
+                    
+                    // Remove any existing event handlers
+                    $('#ledgerTable').off();
+                    $('#ledgerNameSearch').off();
+                    $('#groupNameSearch').off();
+                    $('#subGroupNameSearch').off();
+                    $('#apVersionDropdown').off();
+
+                    // Initialize DataTable with optimized settings
+                    var table = $('#ledgerTable').DataTable({
+                        dom: 'Bfrtip',
+                        buttons: [
+                            {
+                                extend: 'excelHtml5',
+                                exportOptions: {
+                                    columns: ':visible',
+                                    modifier: {
+                                        search: 'applied',
+                                        order: 'applied'
+                                    }
+                                }
+                            }
+                        ],
+                        destroy: true,   // Always destroy and re-create
+                        deferRender: true,
+                        orderClasses: false,
+                        processing: true,
+                        scrollX: true,
+                        scrollY: '50vh',
+                        scroller: true,
+                        paging: true,
+                        pageLength: 25,
+                        bInfo: true,
+                        searching: true,
+                        autoWidth: false,
+                        columnDefs: [
+                            { width: "150px", targets: 1 },  // Ledger Name
+                            { width: "150px", targets: 3 },  // Group Name
+                            { width: "150px", targets: 5 },  // SubGroup Name
+                            { width: "200px", targets: 21 }  // Formula
+                        ],
+                        initComplete: function () {
+                            var api = this.api(); // Use DataTables API instance
+                            console.log('DataTable columns:', api.columns().count());
+                            function debounce(func, wait) {
+                                let timeout;
+                                return function executedFunction(...args) {
+                                    const context = this;
+                                    const later = function() {
+                                        clearTimeout(timeout);
+                                        func.apply(context, args); // Preserve 'this' context
+                                    };
+                                    clearTimeout(timeout);
+                                    timeout = setTimeout(later, wait);
+                                };
+                            }
+
+                            $('#ledgerNameSearch').off().on('keyup', debounce(function (e) {
+                                var val = this.value;
+                                console.log('Ledger Name search event:', e, 'this:', this, 'value:', val);
+                                try {
+                                    api.column(1).search(val).draw();
+                                } catch (err) {
+                                    console.error('Ledger Name search error:', err);
+                                }
+                            }, 300));
+
+                            $('#groupNameSearch').off().on('keyup', debounce(function (e) {
+                                var val = this.value;
+                                console.log('Group Name search event:', e, 'this:', this, 'value:', val);
+                                try {
+                                    api.column(3).search(val).draw();
+                                } catch (err) {
+                                    console.error('Group Name search error:', err);
+                                }
+                            }, 300));
+
+                            $('#subGroupNameSearch').off().on('keyup', debounce(function (e) {
+                                var val = this.value;
+                                console.log('SubGroup Name search event:', e, 'this:', this, 'value:', val);
+                                try {
+                                    api.column(5).search(val).draw();
+                                } catch (err) {
+                                    console.error('SubGroup Name search error:', err);
+                                }
+                            }, 300));
+
+                            $('#apVersionDropdown').off().on('change', function (e) {
+                                var val = this.value;
+                                console.log('AP Version search event:', e, 'this:', this, 'value:', val);
+                                try {
+                                    api.column(26).search(val).draw();
+                                } catch (err) {
+                                    console.error('AP Version search error:', err);
+                                }
+                            });
+                        }
+                    });
+
+                    // Move buttons to the export container
+                    table.buttons().container().appendTo('#exportButtonsContainer');
+
+                    // Handle edit button clicks
+                    $('#ledgerTable').on('click', '.edit-btn', function() {
+                        const ledgerId = $(this).data('id');
+                        const row = table.row($(this).closest('tr')).data();
+                        
+                        // Clone the add ledger modal
+                        const editModal = $('#addLedgerModal').clone();
+                        editModal.attr('id', 'editLedgerModal');
+                        editModal.find('.modal-title').text('Edit Ledger');
+                        
+                        // Initialize wizard functionality for the edit modal
+                        let currentStep = 1;
+                        const totalSteps = 3;
+
+                        function updateWizardUI() {
+                            // Update progress bar
+                            const progress = (currentStep / totalSteps) * 100;
+                            editModal.find('.progress-bar').css('width', progress + '%');
+
+                            // Update navigation pills
+                            editModal.find('.nav-pills .nav-link').removeClass('active');
+                            editModal.find(`.nav-pills .nav-link[href="#step${currentStep}"]`).addClass('active');
+
+                            // Update tab content
+                            editModal.find('.tab-pane').removeClass('show active');
+                            editModal.find(`#step${currentStep}`).addClass('show active');
+
+                            // Update buttons
+                            editModal.find('#prevBtn').toggle(currentStep > 1);
+                            editModal.find('#nextBtn').toggle(currentStep < totalSteps);
+                            editModal.find('#saveLedgerBtn').toggle(currentStep === totalSteps);
+                        }
+
+                        // Bind next button
+                        editModal.find('#nextBtn').off().on('click', function() {
+                            if (currentStep < totalSteps) {
+                                currentStep++;
+                                updateWizardUI();
+                            }
+                        });
+
+                        // Bind previous button
+                        editModal.find('#prevBtn').off().on('click', function() {
+                            if (currentStep > 1) {
+                                currentStep--;
+                                updateWizardUI();
+                            }
+                        });
+
+                        // Initialize wizard UI
+                        updateWizardUI();
+                        
+                        // Populate form fields with row data
+                        // Basic Info (Step 1)
+                        editModal.find('#ledgerName').val(row[1]); // Ledger Name
+                        editModal.find('#groupId').val(row[2]); // Group ID
+                        editModal.find('#groupName').val(row[3]); // Group Name
+                        editModal.find('#subGroupId').val(row[4]); // SubGroup ID
+                        editModal.find('#subGroupName').val(row[5]); // SubGroup Name
+                        editModal.find('#code').val(row[11]); // Code
+                        editModal.find('#version').val(row[10]); // Version
+                        editModal.find('#apVersion').val(row[26]); // AP Version
+                        editModal.find('#ledgerHeader').val(row[28]); // Ledger Header
+
+                        // Type & Status (Step 2)
+                        editModal.find('#isActive').val(row[7].toLowerCase()); // Is Active
+                        editModal.find('#isDeleted').val(row[8].toLowerCase()); // Is Deleted
+                        editModal.find('#isGroup').val(row[12].toLowerCase()); // Is Group
+                        editModal.find('#isLedger').val(row[13].toLowerCase()); // Is Ledger
+                        editModal.find('#isSubGroup').val(row[14].toLowerCase()); // Is SubGroup
+                        editModal.find('#isEditable').val(row[22].toLowerCase()); // Is Editable
+                        editModal.find('#isOptional').val(row[25].toLowerCase()); // Is Optional
+
+                        // Additional Info (Step 3)
+                        editModal.find('#createdBy').val(row[15]); // Created By
+                        editModal.find('#updatedBy').val(row[16]); // Updated By
+                        // Format dates for datetime-local input
+                        const createdDate = new Date(row[6]);
+                        const updatedDate = new Date(row[9]);
+                        editModal.find('#createdDate').val(createdDate.toISOString().slice(0, 16));
+                        editModal.find('#updatedDate').val(updatedDate.toISOString().slice(0, 16));
+                        editModal.find('#ledgerTypeId').val(row[17]); // Ledger Type ID
+                        editModal.find('#parentId').val(row[18]); // Parent ID
+                        editModal.find('#tbMenuId').val(row[19]); // Menu ID
+                        editModal.find('#serialNumber').val(row[20]); // Serial Number
+                        editModal.find('#formula').val(row[21]); // Formula
+                        editModal.find('#depreciationLedgerId').val(row[23]); // Depreciation Ledger ID
+                        editModal.find('#accumulatedDepreciationId').val(row[24]); // Accumulated Depreciation ID
+                        editModal.find('#fsaAreaId').val(row[27]); // FSA Area ID
+
+                        // Mutual exclusivity for Is Group, Is Ledger, Is SubGroup
+                        editModal.find('#isGroupYes').change(function() {
+                            if ($(this).is(':checked')) {
+                                editModal.find('#isLedgerNo').prop('checked', true);
+                                editModal.find('#isSubGroupNo').prop('checked', true);
+                            }
+                        });
+                        editModal.find('#isLedgerYes').change(function() {
+                            if ($(this).is(':checked')) {
+                                editModal.find('#isGroupNo').prop('checked', true);
+                                editModal.find('#isSubGroupNo').prop('checked', true);
+                            }
+                        });
+                        editModal.find('#isSubGroupYes').change(function() {
+                            if ($(this).is(':checked')) {
+                                editModal.find('#isGroupNo').prop('checked', true);
+                                editModal.find('#isLedgerNo').prop('checked', true);
+                            }
+                        });
+
+                        // Update save button to handle edit
+                        editModal.find('#saveLedgerBtn').off().on('click', function() {
+                            const now = new Date();
+                            function getValueOrNull(selector) {
+                                const val = editModal.find(selector).val();
+                                return val === '' ? null : val;
+                            }
+                            const formData = {
+                                id: ledgerId,
+                                ledgerName: getValueOrNull('#ledgerName'),
+                                groupId: getValueOrNull('#groupId'),
+                                groupName: getValueOrNull('#groupName'),
+                                subGroupId: getValueOrNull('#subGroupId'),
+                                subGroupName: getValueOrNull('#subGroupName'),
+                                code: getValueOrNull('#code'),
+                                version: getValueOrNull('#version'),
+                                apVersion: getValueOrNull('#apVersion'),
+                                ledgerHeader: getValueOrNull('#ledgerHeader'),
+                                isActive: editModal.find('#isActive').val() === 'true',
+                                isDeleted: editModal.find('#isDeleted').val() === 'true',
+                                isGroup: editModal.find('input[name="isGroup"]:checked').val() === 'true',
+                                isLedger: editModal.find('input[name="isLedger"]:checked').val() === 'true',
+                                isSubGroup: editModal.find('input[name="isSubGroup"]:checked').val() === 'true',
+                                isEditable: editModal.find('#isEditable').val() === 'true',
+                                isOptional: editModal.find('#isOptional').val() === 'true',
+                                createdBy: getValueOrNull('#createdBy'),
+                                updatedBy: getValueOrNull('#updatedBy'),
+                                ledgerTypeId: getValueOrNull('#ledgerTypeId'),
+                                parentId: getValueOrNull('#parentId'),
+                                tbMenuId: getValueOrNull('#tbMenuId'),
+                                serialNumber: getValueOrNull('#serialNumber'),
+                                formula: getValueOrNull('#formula'),
+                                depreciationLedgerId: getValueOrNull('#depreciationLedgerId'),
+                                accumulatedDepreciationId: getValueOrNull('#accumulatedDepreciationId'),
+                                fsaAreaId: getValueOrNull('#fsaAreaId'),
+                                createdDate: row[6], // Keep original created date
+                                updatedDate: now.toISOString() // Set current date/time for updated date
+                            };
+
+                            // Make AJAX call to update ledger
+                            $.ajax({
+                                url: '/api/ledger/update',
+                                method: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify(formData),
+                                success: function(response) {
+                                    if (response.success) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Success!',
+                                            text: 'Ledger updated successfully!',
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        }).then(() => {
+                                            editModal.modal('hide');
+                                            loadLedgerData(); // Reload the table
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error!',
+                                            text: 'Update failed: ' + (response.message || 'Unknown error')
+                                        });
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error!',
+                                        text: 'Update failed: ' + (xhr.responseJSON?.message || error)
+                                    });
+                                }
+                            });
+                        });
+
+                        // Show the modal
+                        editModal.modal('show');
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading ledger data:', error);
+                    $('#mainContent').html('<div class="alert alert-danger">Failed to load Ledger Data: ' + error.message + '</div>');
+                })
+                .finally(() => {
+                    hideLoading();
+                });
+        }
+
+        // Load Ledger Page on click
+        $('#loadLedgerData').on('click', function (e) {
+            e.preventDefault();
+            loadLedgerData();
+        });
+
+        // Load Transfer Page
+        $('#loadTransferData').on('click', function (e) {
+            e.preventDefault();
+            showLoading();
+
+            // Update the URL without reloading the page
+            window.history.pushState({}, '', '/transfer');
+
+            fetch("/api/config/is-configured")
+                .then(res => res.json())
+                .then(isConfigured => {
+                    if (!isConfigured) {
+                        hideLoading();
+                        alert("⚠️ Please configure the destination database in Settings before transferring data.");
+                        return;
+                    }
+
+                    // Load transfer page
+                    return fetch("/transfer-page")
+                        .then(res => res.text())
+                        .then(html => {
+                            $('#mainContent').html(html);
+                            hideLoading();
+
+                            // Re-bind events on newly loaded content
+                            bindTransferButtonHandler();
+                            bindResetButtonHandler();
+                        });
+                })
+                .catch(() => {
+                    hideLoading();
+                    alert("❌ Unable to verify DB configuration. Try again.");
+                });
+        });
+
+        // Load Settings Page
+        $('#loadSettings').on('click', function (e) {
+            e.preventDefault();
+            showLoading();
+
+            // Update the URL without reloading the page
+            window.history.pushState({}, '', '/settings');
+
+            const query = window.location.search;
+            fetch("/settings" + query)
+                .then(res => res.text())
+                .then(html => {
+                    $('#mainContent').html(html);
+                    hideLoading();
+                })
+                .catch(() => {
+                    $('#mainContent').html('<p class="text-danger">Failed to load Settings.</p>');
+                    hideLoading();
+                });
+        });
+
+        // Reset Button Logic (called after transfer page loads)
+        function bindResetButtonHandler() {
+            $('#resetButton').on('click', function () {
+                $('#loadTransferData').click();
+            });
+        }
+
+        // Transfer Button Logic (called after transfer page loads)
+        function bindTransferButtonHandler() {
+            $('#transferButton').on('click', function (e) {
+                e.preventDefault();
+
+                const selectedId = $('#id').val();
+                const $alert = $('#alertBox');
+                if (!selectedId) {
+                    $alert.removeClass('d-none alert-success').addClass('alert-danger')
+                        .text('⚠️ Please select an ID before transferring.');
+                    return;
+                }
+
+                showLoading();
+
+                fetch('/api/transfer/dynamic-transfer/' + selectedId, {
+                    method: 'POST'
+                })
+                    .then(res => {
+                        hideLoading();
+                        if (!res.ok) throw new Error("Transfer failed");
+                        return res.text();
+                    })
+                    .then(() => {
+                        $alert.removeClass('d-none alert-danger').addClass('alert-success')
+                            .text('✅ Data transferred successfully!');
+
+                            // 🔽 Hide alert after 3 seconds
+                            setTimeout(() => {
+                                $alert.fadeOut('slow', function () {
+                                    $alert.addClass('d-none').show(); // Reset visibility and classes
+                                });
+                            }, 3000);
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        $alert.removeClass('d-none alert-success').addClass('alert-danger')
+                            .text('❌ Error: ' + error.message);
+                    });
+            });
+        }
+    });
+</script>
+
+
+</body>
+</html>
