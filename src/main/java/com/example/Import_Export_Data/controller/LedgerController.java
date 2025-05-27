@@ -23,8 +23,14 @@ public class LedgerController {
     }
 
     @GetMapping("/ledgers")
-    public String getLedgerPage(Model model) {
+    public String getLedgerPage() {
         logger.info("Accessing ledger page");
+        return "index";
+    }
+
+    @GetMapping("/ledger-content")
+    public String getLedgerContent(Model model) {
+        logger.info("Loading ledger content");
         model.addAttribute("ledgers", ledgerService.getAllLedger());
         model.addAttribute("apVersions", ledgerService.getDistinctApVersions());
         model.addAttribute("groups", ledgerService.getAllGroups());
@@ -70,6 +76,25 @@ public class LedgerController {
         } catch (Exception e) {
             logger.error("Error creating ledger: ", e);
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/api/ledger/info/{id}")
+    @ResponseBody
+    public ResponseEntity<?> getLedgerInfo(@PathVariable Integer id) {
+        logger.info("Received request for ledger info for id: {}", id);
+        try {
+            FullLedgerInfoDTO ledgerInfo = ledgerService.getLedgerDetailsById(id);
+            if (ledgerInfo != null) {
+                logger.info("Ledger info found for id: {}", id);
+                return ResponseEntity.ok().body(ledgerInfo);
+            } else {
+                logger.warn("Ledger info not found for id: {}", id);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            logger.error("Error fetching ledger info for id: {}", id, e);
+            return ResponseEntity.status(500).body(Map.of("success", false, "message", "Error fetching ledger info: " + e.getMessage()));
         }
     }
 }
