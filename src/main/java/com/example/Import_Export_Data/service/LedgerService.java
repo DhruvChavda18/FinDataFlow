@@ -59,6 +59,12 @@ public class LedgerService {
         return ledgerRepository.findAllSubGroups();
     }
 
+    // New method to get full ledger info by ID
+    public FullLedgerInfoDTO getLedgerDetailsById(Integer id) {
+        logger.debug("Fetching full ledger info for ID: {}", id);
+        return ledgerRepository.findLedgerWithFullGroupInfoById(id).orElse(null);
+    }
+
     @Transactional
     public boolean updateLedgerField(Integer id, String columnName, String value) {
         logger.info("Updating ledger field - ID: {}, Column: {}", id, columnName);
