@@ -22,6 +22,12 @@ public class IndexController {
         return "transferData";
     }
 
+    @GetMapping("/transfer")
+    public String getTransferPage() {
+        logger.info("Accessing transfer page");
+        return "index";
+    }
+
     @GetMapping("/settings")
     public String loadSettingsPage() {
         logger.debug("Loading settings page");

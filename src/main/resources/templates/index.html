@@ -334,104 +334,104 @@
 
         // Function to initialize DataTable and bind events
         function initializeDataTable() {
-            var table = $('#ledgerTable').DataTable({
-                dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'excelHtml5',
-                        exportOptions: {
-                            columns: ':visible',
-                            modifier: {
-                                search: 'applied',
-                                order: 'applied'
+                    var table = $('#ledgerTable').DataTable({
+                        dom: 'Bfrtip',
+                        buttons: [
+                            {
+                                extend: 'excelHtml5',
+                                exportOptions: {
+                                    columns: ':visible',
+                                    modifier: {
+                                        search: 'applied',
+                                        order: 'applied'
+                                    }
+                                }
                             }
-                        }
-                    }
-                ],
-                destroy: true,   // Always destroy and re-create
-                deferRender: true,
-                orderClasses: false,
-                processing: true,
-                scrollX: true,
-                scrollY: '50vh',
-                scroller: true,
-                paging: true,
-                pageLength: 25,
-                bInfo: true,
-                searching: true,
-                autoWidth: false,
-                columnDefs: [
-                    { width: "150px", targets: 1 },  // Ledger Name
-                    { width: "150px", targets: 3 },  // Group Name
-                    { width: "150px", targets: 5 },  // SubGroup Name
-                    { width: "200px", targets: 21 }  // Formula
-                ],
-                initComplete: function () {
-                    var api = this.api(); // Use DataTables API instance
-                    console.log('DataTable columns:', api.columns().count());
-                    function debounce(func, wait) {
-                        let timeout;
-                        return function executedFunction(...args) {
-                            const context = this;
-                            const later = function() {
-                                clearTimeout(timeout);
-                                func.apply(context, args); // Preserve 'this' context
-                            };
-                            clearTimeout(timeout);
-                            timeout = setTimeout(later, wait);
-                        };
-                    }
+                        ],
+                        destroy: true,   // Always destroy and re-create
+                        deferRender: true,
+                        orderClasses: false,
+                        processing: true,
+                        scrollX: true,
+                        scrollY: '50vh',
+                        scroller: true,
+                        paging: true,
+                        pageLength: 25,
+                        bInfo: true,
+                        searching: true,
+                        autoWidth: false,
+                        columnDefs: [
+                            { width: "150px", targets: 1 },  // Ledger Name
+                            { width: "150px", targets: 3 },  // Group Name
+                            { width: "150px", targets: 5 },  // SubGroup Name
+                            { width: "200px", targets: 21 }  // Formula
+                        ],
+                        initComplete: function () {
+                            var api = this.api(); // Use DataTables API instance
+                            console.log('DataTable columns:', api.columns().count());
+                            function debounce(func, wait) {
+                                let timeout;
+                                return function executedFunction(...args) {
+                                    const context = this;
+                                    const later = function() {
+                                        clearTimeout(timeout);
+                                        func.apply(context, args); // Preserve 'this' context
+                                    };
+                                    clearTimeout(timeout);
+                                    timeout = setTimeout(later, wait);
+                                };
+                            }
 
-                    $('#ledgerNameSearch').off().on('keyup', debounce(function (e) {
-                        var val = this.value;
-                        console.log('Ledger Name search event:', e, 'this:', this, 'value:', val);
-                        try {
-                            api.column(1).search(val).draw();
-                        } catch (err) {
-                            console.error('Ledger Name search error:', err);
-                        }
-                    }, 300));
+                            $('#ledgerNameSearch').off().on('keyup', debounce(function (e) {
+                                var val = this.value;
+                                console.log('Ledger Name search event:', e, 'this:', this, 'value:', val);
+                                try {
+                                    api.column(1).search(val).draw();
+                                } catch (err) {
+                                    console.error('Ledger Name search error:', err);
+                                }
+                            }, 300));
 
-                    $('#groupNameSearch').off().on('keyup', debounce(function (e) {
-                        var val = this.value;
-                        console.log('Group Name search event:', e, 'this:', this, 'value:', val);
-                        try {
-                            api.column(3).search(val).draw();
-                        } catch (err) {
-                            console.error('Group Name search error:', err);
-                        }
-                    }, 300));
+                            $('#groupNameSearch').off().on('keyup', debounce(function (e) {
+                                var val = this.value;
+                                console.log('Group Name search event:', e, 'this:', this, 'value:', val);
+                                try {
+                                    api.column(3).search(val).draw();
+                                } catch (err) {
+                                    console.error('Group Name search error:', err);
+                                }
+                            }, 300));
 
-                    $('#subGroupNameSearch').off().on('keyup', debounce(function (e) {
-                        var val = this.value;
-                        console.log('SubGroup Name search event:', e, 'this:', this, 'value:', val);
-                        try {
-                            api.column(5).search(val).draw();
-                        } catch (err) {
-                            console.error('SubGroup Name search error:', err);
-                        }
-                    }, 300));
+                            $('#subGroupNameSearch').off().on('keyup', debounce(function (e) {
+                                var val = this.value;
+                                console.log('SubGroup Name search event:', e, 'this:', this, 'value:', val);
+                                try {
+                                    api.column(5).search(val).draw();
+                                } catch (err) {
+                                    console.error('SubGroup Name search error:', err);
+                                }
+                            }, 300));
 
-                    $('#apVersionDropdown').off().on('change', function (e) {
-                        var val = this.value;
-                        console.log('AP Version search event:', e, 'this:', this, 'value:', val);
-                        try {
-                            api.column(26).search(val).draw();
-                        } catch (err) {
-                            console.error('AP Version search error:', err);
+                            $('#apVersionDropdown').off().on('change', function (e) {
+                                var val = this.value;
+                                console.log('AP Version search event:', e, 'this:', this, 'value:', val);
+                                try {
+                                    api.column(26).search(val).draw();
+                                } catch (err) {
+                                    console.error('AP Version search error:', err);
+                                }
+                            });
                         }
                     });
-                }
-            });
 
-            // Move buttons to the export container
-            table.buttons().container().appendTo('#exportButtonsContainer');
+                    // Move buttons to the export container
+                    table.buttons().container().appendTo('#exportButtonsContainer');
 
-            // Handle edit button clicks
-            $('#ledgerTable').on('click', '.edit-btn', function() {
-                const ledgerId = $(this).data('id');
+                    // Handle edit button clicks
+                    $('#ledgerTable').on('click', '.edit-btn', function() {
+                        const ledgerId = $(this).data('id');
                 const rowData = table.row($(this).closest('tr')).data();
-
+                        
                 // Fetch full ledger info by ID for the modal
                 fetch('/api/ledger/info/' + ledgerId)
                     .then(res => {
@@ -445,7 +445,7 @@
                         const editModal = $('#addLedgerModal').clone();
                         editModal.attr('id', 'editLedgerModal');
                         editModal.find('.modal-title').text('Edit Ledger');
-
+                        
                         // Initialize wizard functionality for the edit modal
                         let currentStep = 1;
                         const totalSteps = 3;
@@ -487,7 +487,7 @@
 
                         // Initialize wizard UI
                         updateWizardUI();
-
+                        
                         // Populate form fields with fetched data
                         // Basic Info (Step 1)
                         editModal.find('#ledgerName').val(ledgerInfo.ledgerName);
@@ -628,10 +628,10 @@
                         // Remove the modal from the DOM when it's hidden
                         editModal.on('hidden.bs.modal', function () {
                             $(this).remove();
-                        });
+                    });
 
-                    })
-                    .catch(error => {
+                })
+                .catch(error => {
                         console.error('Error fetching ledger info for edit:', error);
                         Swal.fire({
                             icon: 'error',
@@ -645,16 +645,18 @@
         // Function to handle URL changes
         function handleUrlChange() {
             const path = window.location.pathname;
+            console.log('URL path changed to:', path);
             if (path === '/ledgers') {
                 loadLedgerContent();
             } else if (path === '/transfer') {
+                console.log('Detected /transfer path, calling loadTransferPage()');
                 loadTransferPage(); // Assuming you have a function to load transfer page
             } else if (path === '/settings') {
                 loadSettingsPage(); // Assuming you have a function to load settings page
             } else {
                 // Handle default or other paths if needed
                 $('#mainContent').html($('#defaultContent').html()); // Show default content
-                hideLoading();
+                    hideLoading();
             }
         }
 
@@ -704,7 +706,6 @@
 
         // Existing functions for loading Transfer and Settings pages (assuming they exist)
         function loadTransferPage() {
-            showLoading();
             if ($.fn.DataTable.isDataTable('#transferTable')) {
                 $('#transferTable').DataTable().destroy();
             }
@@ -712,7 +713,6 @@
                 .then(res => res.json())
                 .then(isConfigured => {
                     if (!isConfigured) {
-                        hideLoading();
                         $('#mainContent').html('<div class="alert alert-warning">⚠️ Please configure the destination database in Settings before transferring data.</div>');
                         return;
                     }
@@ -720,21 +720,20 @@
                     fetch("/transfer-page")
                         .then(res => res.text())
                         .then(html => {
+                            console.log('Fetched transfer page HTML:', html);
                             $('#mainContent').html(html);
-                            hideLoading();
+                            // $('#mainContent').css('border', '1px solid red'); // Add a temporary border
                             // Re-bind events on newly loaded content if needed
-                            bindTransferButtonHandler(); // Assuming this exists in main.js or index.html
-                            bindResetButtonHandler(); // Assuming this exists in main.js or index.html
+                            bindTransferButtonHandler();
+                            bindResetButtonHandler();
                         })
                         .catch(error => {
                             console.error('Error loading transfer page:', error);
-                            hideLoading();
                             $('#mainContent').html('<div class="alert alert-danger">❌ Unable to load Transfer Data.</div>');
                         });
                 })
                 .catch(error => {
                     console.error('Error verifying config for transfer:', error);
-                    hideLoading();
                     $('#mainContent').html('<div class="alert alert-danger">❌ Unable to verify DB configuration. Try again.</div>');
                 });
         }
@@ -758,7 +757,55 @@
         // Assume bindTransferButtonHandler and bindResetButtonHandler are defined elsewhere if needed
         // For now, I'll add simple placeholder functions to avoid errors
         function bindTransferButtonHandler() {
-            console.log("Transfer button handler would be bound here.");
+            $('#transferForm').on('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
+
+                const id = $('#id').val();
+                if (!id) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing ID',
+                        text: 'Please enter an ID to transfer.'
+                    });
+                    return;
+                }
+
+                // Optional: Show a loading spinner or message
+                // showLoading(); // If you want to reuse the global spinner
+                // Or show the local spinner in transferData.html:
+                 $('#transferButton').prop('disabled', true).text('Transferring...');
+                 $('#spinner').removeClass('d-none');
+                 $('#alertBox').addClass('d-none').text(''); // Hide previous alerts
+
+                $.ajax({
+                    url: '/api/transfer/dynamic-transfer/' + id,
+                    method: 'POST',
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: response || 'Data transferred successfully!',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                         $('#alertBox').removeClass('alert-danger alert-warning').addClass('alert-success').text(response || 'Data transferred successfully!').removeClass('d-none');
+                    },
+                    error: function(xhr, status, error) {
+                        let errorMessage = 'Transfer failed: ' + (xhr.responseJSON?.message || xhr.responseText || error);
+                         Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: errorMessage
+                        });
+                        $('#alertBox').removeClass('alert-success alert-warning').addClass('alert-danger').text(errorMessage).removeClass('d-none');
+                    },
+                    complete: function() {
+                        // Hide loading spinner and re-enable button
+                         $('#transferButton').prop('disabled', false).text('Transfer');
+                         $('#spinner').addClass('d-none');
+                    }
+                });
+            });
         }
 
         function bindResetButtonHandler() {
