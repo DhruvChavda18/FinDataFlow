@@ -18,7 +18,11 @@ public class DynamicDatabaseConfig {
 
     public DataSource createDataSource(DestinationDbConfig config) {
         BasicDataSource dataSource = new BasicDataSource();
-        dataSource.setUrl("jdbc:postgresql://localhost:5432/" + config.getDbName());
+        String jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s",
+            config.getHost(),
+            config.getPort(),
+            config.getDbName());
+        dataSource.setUrl(jdbcUrl);
         dataSource.setUsername(config.getUsername());
         dataSource.setPassword(config.getPassword());
         dataSource.setDriverClassName("org.postgresql.Driver");

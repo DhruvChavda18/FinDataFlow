@@ -13,7 +13,10 @@ public class DatabaseCreationService {
 
     public boolean createDatabase(DestinationDbConfig config) throws SQLException {
         String systemDb = "postgres"; // default base DB to connect for admin tasks
-        String systemUrl = "jdbc:postgresql://localhost:5432/" + systemDb;
+        String systemUrl = String.format("jdbc:postgresql://%s:%s/%s",
+            config.getHost(),
+            config.getPort(),
+            systemDb);
 
         logger.info("Connecting to system database to check/create destination database: {}", config.getDbName());
 

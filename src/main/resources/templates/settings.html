@@ -3,16 +3,24 @@
     <h5>Database Configuration</h5>
     <form id="settingsForm">
         <div class="mb-3">
-            <label for="username" class="form-label">Username</label>
-            <input type="text" id="username" name="username" class="form-control" required />
+            <label for="host" class="form-label">Host</label>
+            <input type="text" id="host" name="host" class="form-control" required placeholder="Enter host (e.g., localhost)" />
         </div>
         <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" id="password" name="password" class="form-control" required />
+            <label for="port" class="form-label">Port</label>
+            <input type="text" id="port" name="port" class="form-control" required placeholder="Enter port (e.g., 5432)" />
         </div>
         <div class="mb-3">
             <label for="dbname" class="form-label">Database Name</label>
-            <input type="text" id="dbname" name="dbname" class="form-control" required />
+            <input type="text" id="dbname" name="dbname" class="form-control" required placeholder="Enter database name" />
+        </div>
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" id="username" name="username" class="form-control" required placeholder="Enter username" />
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" id="password" name="password" class="form-control" required placeholder="Enter password" />
         </div>
         <div class="d-flex">
             <button type="submit" class="btn btn-primary">Save Settings</button>
@@ -38,6 +46,8 @@
         if (queryParams.username) $("#username").val(queryParams.username);
         if (queryParams.password) $("#password").val(queryParams.password);
         if (queryParams.dbname) $("#dbname").val(queryParams.dbname);
+        if (queryParams.host) $("#host").val(queryParams.host);
+        if (queryParams.port) $("#port").val(queryParams.port);
 
         // 🧾 Form Submit
         $("#settingsForm").on("submit", function (e) {
@@ -45,7 +55,9 @@
             const configData = {
                 username: $("#username").val(),
                 password: $("#password").val(),
-                dbName: $("#dbname").val()
+                dbName: $("#dbname").val(),
+                host: $("#host").val(),
+                port: $("#port").val()
             };
             fetch("/api/config/create-db", {
                 method: "POST",

@@ -1,7 +1,6 @@
 package com.example.Import_Export_Data.controller;
 
 import com.example.Import_Export_Data.DTO.DestinationDbConfig;
-import com.example.Import_Export_Data.service.DataTransferService;
 import com.example.Import_Export_Data.service.DynamicDataTransferService;
 import com.example.Import_Export_Data.service.TemporaryDatabaseStore;
 import org.slf4j.Logger;
@@ -16,22 +15,11 @@ public class DataTransferController {
     private static final Logger logger = LoggerFactory.getLogger(DataTransferController.class);
 
     @Autowired
-    private DataTransferService dataTransferService;
-
-    @Autowired
     private DynamicDataTransferService dynamicDataTransferService;
 
     @Autowired
     private TemporaryDatabaseStore temporaryDatabaseStore;
 
-
-//    @PostMapping("/{id}")
-//    public ResponseEntity<String> transferRecords(@PathVariable Integer id){
-//        dataTransferService.transferById(id);
-//        return ResponseEntity.ok("Data Transferes successfully!");
-//    }
-
-    // ✅ NEW: Dynamic Transfer using runtime DB config
     @PostMapping("/dynamic-transfer/{id}")
     public ResponseEntity<String> transferToDynamicDb(@PathVariable Integer id) {
         logger.info("Received dynamic transfer request for ID: {}", id);
