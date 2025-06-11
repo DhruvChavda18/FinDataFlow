@@ -2,6 +2,8 @@ package com.example.Import_Export_Data.DTO;
 
 public class DestinationDbConfig {
 
+    private String host;
+    private String port;
     private String dbName;
     private String username;
     private String password;
@@ -9,10 +11,28 @@ public class DestinationDbConfig {
     public DestinationDbConfig() {
     }
 
-    public DestinationDbConfig(String dbName, String username, String password) {
+    public DestinationDbConfig(String host, String port, String dbName, String username, String password) {
+        this.host = host;
+        this.port = port;
         this.dbName = dbName;
         this.username = username;
         this.password = password;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public String getPort() {
+        return port;
+    }
+
+    public void setPort(String port) {
+        this.port = port;
     }
 
     public String getDbName() {

@@ -30,6 +30,7 @@ public class LedgerController {
 
     @GetMapping("/ledger-content")
     public String getLedgerContent(Model model) {
+        // UUID uuid = UUID.randomUUID();
         logger.info("Loading ledger content");
         model.addAttribute("ledgers", ledgerService.getAllLedger());
         model.addAttribute("apVersions", ledgerService.getDistinctApVersions());
