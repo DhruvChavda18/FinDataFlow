@@ -709,33 +709,37 @@
             if ($.fn.DataTable.isDataTable('#transferTable')) {
                 $('#transferTable').DataTable().destroy();
             }
-            fetch("/api/config/is-configured")
-                .then(res => res.json())
-                .then(isConfigured => {
-                    if (!isConfigured) {
-                        $('#mainContent').html('<div class="alert alert-warning">⚠️ Please configure the destination database in Settings before transferring data.</div>');
-                        return;
-                    }
+            Promise.all([
+                fetch('/api/config/is-configured').then(res => res.json()),
+                fetch('/api/transfer/is-source-configured').then(res => res.json())
+            ]).then(([isDestConfigured, isSourceConfigured]) => {
+                if (!isDestConfigured && !isSourceConfigured) {
+                    $('#mainContent').html('<div class="alert alert-warning">⚠️ Please configure <b>both source and destination</b> databases in Settings before transferring data.</div>');
+                    return;
+                } else if (!isDestConfigured) {
+                    $('#mainContent').html('<div class="alert alert-warning">⚠️ Please configure the <b>destination</b> database in Settings before transferring data.</div>');
+                    return;
+                } else if (!isSourceConfigured) {
+                    $('#mainContent').html('<div class="alert alert-warning">⚠️ Please configure the <b>source</b> database in Settings before transferring data.</div>');
+                    return;
+                }
 
-                    fetch("/transfer-page")
-                        .then(res => res.text())
-                        .then(html => {
-                            console.log('Fetched transfer page HTML:', html);
-                            $('#mainContent').html(html);
-                            // $('#mainContent').css('border', '1px solid red'); // Add a temporary border
-                            // Re-bind events on newly loaded content if needed
-                            bindTransferButtonHandler();
-                            bindResetButtonHandler();
-                        })
-                        .catch(error => {
-                            console.error('Error loading transfer page:', error);
-                            $('#mainContent').html('<div class="alert alert-danger">❌ Unable to load Transfer Data.</div>');
-                        });
-                })
-                .catch(error => {
-                    console.error('Error verifying config for transfer:', error);
-                    $('#mainContent').html('<div class="alert alert-danger">❌ Unable to verify DB configuration. Try again.</div>');
-                });
+                fetch("/transfer-page")
+                    .then(res => res.text())
+                    .then(html => {
+                        console.log('Fetched transfer page HTML:', html);
+                        $('#mainContent').html(html);
+                        bindTransferButtonHandler();
+                        bindResetButtonHandler();
+                    })
+                    .catch(error => {
+                        console.error('Error loading transfer page:', error);
+                        $('#mainContent').html('<div class="alert alert-danger">❌ Unable to load Transfer Data.</div>');
+                    });
+            }).catch(error => {
+                console.error('Error verifying config for transfer:', error);
+                $('#mainContent').html('<div class="alert alert-danger">❌ Unable to verify DB configuration. Try again.</div>');
+            });
         }
 
         function loadSettingsPage() {
@@ -781,23 +785,27 @@
                     url: '/api/transfer/dynamic-transfer/' + id,
                     method: 'POST',
                     success: function(response) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: response || 'Data transferred successfully!',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
-                         $('#alertBox').removeClass('alert-danger alert-warning').addClass('alert-success').text(response || 'Data transferred successfully!').removeClass('d-none');
+                        $('#alertBox')
+                            .removeClass('alert-danger alert-warning')
+                            .addClass('alert-success')
+                            .text(response || 'Data transferred successfully!')
+                            .removeClass('d-none')
+                            .fadeIn();
+                        
+                        // Auto-hide after 3 seconds
+                        setTimeout(function() {
+                            $('#alertBox').fadeOut(function() {
+                                $(this).addClass('d-none');
+                            });
+                        }, 3000);
                     },
                     error: function(xhr, status, error) {
                         let errorMessage = 'Transfer failed: ' + (xhr.responseJSON?.message || xhr.responseText || error);
-                         Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: errorMessage
-                        });
-                        $('#alertBox').removeClass('alert-success alert-warning').addClass('alert-danger').text(errorMessage).removeClass('d-none');
+                        $('#alertBox')
+                            .removeClass('alert-success alert-warning')
+                            .addClass('alert-danger')
+                            .text(errorMessage)
+                            .removeClass('d-none');
                     },
                     complete: function() {
                         // Hide loading spinner and re-enable button

@@ -1,8 +1,11 @@
 package com.example.Import_Export_Data.controller;
 
 import com.example.Import_Export_Data.DTO.DestinationDbConfig;
+import com.example.Import_Export_Data.DTO.SourceDbConfig;
 import com.example.Import_Export_Data.service.DatabaseCreationService;
+import com.example.Import_Export_Data.service.SourceDatabaseValidationService;
 import com.example.Import_Export_Data.service.TemporaryDatabaseStore;
+import com.example.Import_Export_Data.service.TemporarySourceDatabaseStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,12 @@ public class DatabaseConfigController {
 
     @Autowired
     private TemporaryDatabaseStore temporaryDatabaseStore;
+
+    @Autowired
+    private TemporarySourceDatabaseStore temporarySourceDatabaseStore;
+
+    @Autowired
+    private SourceDatabaseValidationService sourceDatabaseValidationService;
 
     @PostMapping("/create-db")
     public ResponseEntity<String> createDatabase(@RequestBody DestinationDbConfig config) {
@@ -48,6 +57,30 @@ public class DatabaseConfigController {
         }
     }
 
+    @PostMapping("/validate-source")
+    public ResponseEntity<String> validateSourceDatabase(@RequestBody SourceDbConfig config) {
+        logger.info("Received source database validation request for database: {}", config.getDbName());
+        
+        try {
+            SourceDatabaseValidationService.ValidationResult result = 
+                sourceDatabaseValidationService.validateSourceDatabase(config);
+            
+            if (result.isSuccess()) {
+                // Save the configuration if validation is successful
+                temporarySourceDatabaseStore.save(config);
+                logger.info("Source database configuration saved successfully");
+                return ResponseEntity.ok("✅ " + result.getMessage());
+            } else {
+                logger.warn("Source database validation failed: {}", result.getMessage());
+                return ResponseEntity.badRequest().body("❌ " + result.getMessage());
+            }
+        } catch (Exception e) {
+            logger.error("Error validating source database: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("❌ Error: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/is-configured")
     public ResponseEntity<Boolean> isDatabaseConfigured() {
         logger.debug("Checking if database is configured");
@@ -58,9 +91,17 @@ public class DatabaseConfigController {
 
     @PostMapping("/reset-db")
     public ResponseEntity<String> resetDbConfig() {
-        logger.info("Resetting database configuration");
+        logger.info("Resetting destination database configuration");
         temporaryDatabaseStore.clear();
-        logger.debug("Database configuration cleared from temporary store");
-        return ResponseEntity.ok("Database configuration has been reset.");
+        logger.debug("Destination database configuration cleared from temporary store");
+        return ResponseEntity.ok("Destination database configuration has been reset.");
+    }
+
+    @PostMapping("/reset-source")
+    public ResponseEntity<String> resetSourceDbConfig() {
+        logger.info("Resetting source database configuration");
+        temporarySourceDatabaseStore.clear();
+        logger.debug("Source database configuration cleared from temporary store");
+        return ResponseEntity.ok("Source database configuration has been reset.");
     }
 }

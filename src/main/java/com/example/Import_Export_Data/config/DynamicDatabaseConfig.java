@@ -1,6 +1,7 @@
 package com.example.Import_Export_Data.config;
 
 import com.example.Import_Export_Data.DTO.DestinationDbConfig;
+import com.example.Import_Export_Data.DTO.SourceDbConfig;
 import jakarta.persistence.EntityManagerFactory;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -17,6 +18,20 @@ import java.util.Map;
 public class DynamicDatabaseConfig {
 
     public DataSource createDataSource(DestinationDbConfig config) {
+        BasicDataSource dataSource = new BasicDataSource();
+        String jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s",
+            config.getHost(),
+            config.getPort(),
+            config.getDbName());
+        dataSource.setUrl(jdbcUrl);
+        dataSource.setUsername(config.getUsername());
+        dataSource.setPassword(config.getPassword());
+        dataSource.setDriverClassName("org.postgresql.Driver");
+        return dataSource;
+    }
+
+    // Overload for SourceDbConfig
+    public DataSource createDataSource(SourceDbConfig config) {
         BasicDataSource dataSource = new BasicDataSource();
         String jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s",
             config.getHost(),
