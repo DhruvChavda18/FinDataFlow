@@ -1,10 +1,10 @@
 package com.example.Import_Export_Data.service;
 
 import com.example.Import_Export_Data.DTO.DestinationDbConfig;
+import com.example.Import_Export_Data.DTO.SourceDbConfig;
 import com.example.Import_Export_Data.config.DynamicDatabaseConfig;
 import com.example.Import_Export_Data.entity.destination.*;
 import com.example.Import_Export_Data.entity.source.*;
-import com.example.Import_Export_Data.repository.source.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.transaction.Transactional;
@@ -21,44 +21,53 @@ public class DynamicDataTransferService {
     private static final Logger logger = LoggerFactory.getLogger(DynamicDataTransferService.class);
 
     @Autowired
-    private SourceMasterChartOfAccountRepository sourceChartRepo;
-    @Autowired
-    private SourceAccountProductionMasterSectionRepository sourceSectionsRepo;
-    @Autowired
-    private SourceAccountProductionSubSectionsRepository sourceSubSectionsRepo;
-    @Autowired
-    private SourceAccountProductionMasterTableRepository sourceTablesRepo;
-
-    @Autowired
     private DynamicDatabaseConfig dynamicDatabaseConfig;
 
-    @Transactional
-    public void transferToDynamicDestination(Integer sourceId, DestinationDbConfig config) throws Exception {
-        logger.info("Starting dynamic data transfer for source ID: {} to database: {}", sourceId, config.getDbName());
-        
-        DataSource dynamicDataSource = dynamicDatabaseConfig.createDataSource(config);
-        EntityManagerFactory emf = dynamicDatabaseConfig.createEntityManagerFactory(dynamicDataSource);
-        EntityManager em = emf.createEntityManager();
+    @Autowired
+    private TemporarySourceDatabaseStore temporarySourceDatabaseStore;
 
-        em.getTransaction().begin();
+    @Autowired
+    private TemporaryDatabaseStore temporaryDatabaseStore;
+
+    @Transactional
+    public void transferToDynamicDestination(Integer sourceId) throws Exception {
+        logger.info("Starting dynamic data transfer for source ID: {}", sourceId);
+
+        // Fetch configs from temporary stores
+        SourceDbConfig sourceConfig = temporarySourceDatabaseStore.get();
+        DestinationDbConfig destConfig = temporaryDatabaseStore.get();
+
+        if (sourceConfig == null) {
+            throw new IllegalStateException("Source database configuration not found.");
+        }
+        if (destConfig == null) {
+            throw new IllegalStateException("Destination database configuration not found.");
+        }
+
+        // Create dynamic EntityManagers for source and destination
+        DataSource sourceDataSource = dynamicDatabaseConfig.createDataSource(sourceConfig);
+        EntityManagerFactory sourceEmf = dynamicDatabaseConfig.createEntityManagerFactory(sourceDataSource);
+        EntityManager sourceEm = sourceEmf.createEntityManager();
+
+        DataSource destDataSource = dynamicDatabaseConfig.createDataSource(destConfig);
+        EntityManagerFactory destEmf = dynamicDatabaseConfig.createEntityManagerFactory(destDataSource);
+        EntityManager destEm = destEmf.createEntityManager();
+
+        destEm.getTransaction().begin();
 
         try {
-            logger.debug("Testing database connection");
-            em.createNativeQuery("SELECT 1").getSingleResult();
-            logger.debug("Database connection successful");
-
             // 1. Fetch source MasterChart
             logger.debug("Fetching source MasterChart with ID: {}", sourceId);
-            MasterChartOfAccount source = sourceChartRepo.findById(sourceId)
-                    .orElseThrow(() -> {
-                        logger.error("Source account not found with ID: {}", sourceId);
-                        return new IllegalArgumentException("Invalid sourceId: " + sourceId);
-                    });
+            MasterChartOfAccount source = sourceEm.find(MasterChartOfAccount.class, sourceId);
+            if (source == null) {
+                logger.error("Source account not found with ID: {}", sourceId);
+                throw new IllegalArgumentException("Invalid sourceId: " + sourceId);
+            }
             logger.debug("Found source account: {}", source.getChartofaccountname());
 
             // 2. Soft delete existing destination data by chart name
             logger.debug("Checking for existing accounts with name: {}", source.getChartofaccountname());
-            List<DestinationMasterChartOfAccount> existingAccounts = em
+            List<DestinationMasterChartOfAccount> existingAccounts = destEm
                     .createQuery("SELECT d FROM DestinationMasterChartOfAccount d WHERE d.chartOfAccountName = :name", DestinationMasterChartOfAccount.class)
                     .setParameter("name", source.getChartofaccountname())
                     .getResultList();
@@ -68,20 +77,20 @@ public class DynamicDataTransferService {
                 for (DestinationMasterChartOfAccount oldAccount : existingAccounts) {
                     logger.debug("Soft deleting account ID: {}", oldAccount.getId());
                     oldAccount.setDeleted(true);
-                    em.merge(oldAccount);
+                    destEm.merge(oldAccount);
 
                     logger.debug("Soft deleting related sections for account ID: {}", oldAccount.getId());
-                    em.createQuery("UPDATE DestinationAccountProductionMasterSection s SET s.isDeleted = true WHERE s.apVersion = :id")
+                    destEm.createQuery("UPDATE DestinationAccountProductionMasterSection s SET s.isDeleted = true WHERE s.apVersion = :id")
                             .setParameter("id", oldAccount.getId())
                             .executeUpdate();
 
                     logger.debug("Soft deleting related sub-sections for account ID: {}", oldAccount.getId());
-                    em.createQuery("UPDATE DestinationAccountProductionSubSections s SET s.isDeleted = true WHERE s.masterChartOfAccountId = :id")
+                    destEm.createQuery("UPDATE DestinationAccountProductionSubSections s SET s.isDeleted = true WHERE s.masterChartOfAccountId = :id")
                             .setParameter("id", oldAccount.getId())
                             .executeUpdate();
 
                     logger.debug("Soft deleting related tables for account ID: {}", oldAccount.getId());
-                    em.createQuery("UPDATE DestinationAccountProductionMasterTable t SET t.isDeleted = true WHERE t.masterChartOfAccountId = :id")
+                    destEm.createQuery("UPDATE DestinationAccountProductionMasterTable t SET t.isDeleted = true WHERE t.masterChartOfAccountId = :id")
                             .setParameter("id", oldAccount.getId())
                             .executeUpdate();
                 }
@@ -90,57 +99,65 @@ public class DynamicDataTransferService {
             // 3. Insert MasterChart
             logger.debug("Creating new destination account");
             DestinationMasterChartOfAccount destChart = new DestinationMasterChartOfAccount(source);
-            em.persist(destChart);
-            em.flush();
+            destEm.persist(destChart);
+            destEm.flush();
             int destId = destChart.getId();
             logger.info("Created new destination account with ID: {}", destId);
 
             // 4. Transfer Sections
             logger.debug("Fetching source sections");
-            List<AccountProductionMasterSection> sourceSections = sourceSectionsRepo.findAllByApVersion(sourceId);
+            List<AccountProductionMasterSection> sourceSections = sourceEm
+                .createQuery("SELECT s FROM AccountProductionMasterSection s WHERE s.apVersion = :id", AccountProductionMasterSection.class)
+                .setParameter("id", sourceId)
+                .getResultList();
             logger.debug("Found {} sections to transfer", sourceSections.size());
-            
             for (AccountProductionMasterSection s : sourceSections) {
                 DestinationAccountProductionMasterSection d = new DestinationAccountProductionMasterSection(s);
                 d.setApVersion(destId);
-                em.persist(d);
+                destEm.persist(d);
             }
             logger.info("Transferred {} sections successfully", sourceSections.size());
 
             // 5. Transfer SubSections
             logger.debug("Fetching source sub-sections");
-            List<AccountProductionSubSections> sourceSubSections = sourceSubSectionsRepo.findByMasterChartOfAccountId(sourceId);
+            List<AccountProductionSubSections> sourceSubSections = sourceEm
+                .createQuery("SELECT s FROM AccountProductionSubSections s WHERE s.masterChartOfAccountId = :id", AccountProductionSubSections.class)
+                .setParameter("id", sourceId)
+                .getResultList();
             logger.debug("Found {} sub-sections to transfer", sourceSubSections.size());
-            
             for (AccountProductionSubSections s : sourceSubSections) {
                 DestinationAccountProductionSubSections d = new DestinationAccountProductionSubSections(s);
                 d.setMasterChartOfAccountId(destId);
-                em.persist(d);
+                destEm.persist(d);
             }
             logger.info("Transferred {} sub-sections successfully", sourceSubSections.size());
 
             // 6. Transfer Tables
             logger.debug("Fetching source tables");
-            List<AccountProductionMasterTable> sourceTables = sourceTablesRepo.findAllByMasterChartOfAccountId(sourceId);
+            List<AccountProductionMasterTable> sourceTables = sourceEm
+                .createQuery("SELECT t FROM AccountProductionMasterTable t WHERE t.masterChartOfAccountId = :id", AccountProductionMasterTable.class)
+                .setParameter("id", sourceId)
+                .getResultList();
             logger.debug("Found {} tables to transfer", sourceTables.size());
-            
             for (AccountProductionMasterTable t : sourceTables) {
                 DestinationAccountProductionMasterTable d = new DestinationAccountProductionMasterTable(t);
                 d.setMasterChartOfAccountId(destId);
-                em.persist(d);
+                destEm.persist(d);
             }
             logger.info("Transferred {} tables successfully", sourceTables.size());
 
-            em.getTransaction().commit();
-            logger.info("Data transfer completed successfully for source ID: {} to database: {}", sourceId, config.getDbName());
+            destEm.getTransaction().commit();
+            logger.info("Data transfer completed successfully for source ID: {}", sourceId);
         } catch (Exception e) {
-            logger.error("Transfer failed for source ID: {} to database: {}", sourceId, config.getDbName(), e);
-            em.getTransaction().rollback();
+            logger.error("Transfer failed for source ID: {}", sourceId, e);
+            destEm.getTransaction().rollback();
             throw new RuntimeException("Transfer failed: " + e.getMessage());
         } finally {
-            logger.debug("Closing EntityManager and EntityManagerFactory");
-            em.close();
-            emf.close();
+            logger.debug("Closing EntityManagers and EntityManagerFactories");
+            sourceEm.close();
+            sourceEmf.close();
+            destEm.close();
+            destEmf.close();
         }
     }
 }

@@ -1,33 +1,218 @@
 <!-- settings.html -->
 <div class="container mt-4">
-    <h5>Database Configuration</h5>
-    <form id="settingsForm">
-        <div class="mb-3">
-            <label for="host" class="form-label">Host</label>
-            <input type="text" id="host" name="host" class="form-control" required placeholder="Enter host (e.g., localhost)" />
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-cogs fa-2x text-primary me-3"></i>
+                        <div>
+                            <h5 class="mb-0 text-dark">Database Configuration</h5>
+                            <small class="text-muted">Configure source and destination databases</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Source Database Configuration -->
+                        <div class="col-md-6 border-end">
+                            <div class="mb-4">
+                                <h6 class="text-dark mb-3">
+                                    <i class="fas fa-database me-2"></i>Source Database
+                                </h6>
+                                <form id="sourceSettingsForm" class="needs-validation" novalidate>
+                                    <div class="mb-3">
+                                        <label for="sourceHost" class="form-label">Host</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-server"></i></span>
+                                            <input type="text" id="sourceHost" name="host" class="form-control" required 
+                                                placeholder="Enter host (e.g., localhost)" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="sourcePort" class="form-label">Port</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-plug"></i></span>
+                                            <input type="text" id="sourcePort" name="port" class="form-control" required 
+                                                placeholder="Enter port (e.g., 5432)" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="sourceDbname" class="form-label">Database Name</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-database"></i></span>
+                                            <input type="text" id="sourceDbname" name="dbname" class="form-control" required 
+                                                placeholder="Enter database name" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="sourceUsername" class="form-label">Username</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                            <input type="text" id="sourceUsername" name="username" class="form-control" required 
+                                                placeholder="Enter username" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="sourcePassword" class="form-label">Password</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                            <input type="password" id="sourcePassword" name="password" class="form-control" required 
+                                                placeholder="Enter password" />
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary flex-grow-1">
+                                            <i class="fas fa-check-circle me-2"></i>Validate Source DB
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" id="resetSourceConfigBtn">
+                                            <i class="fas fa-redo me-2"></i>Reset
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Destination Database Configuration -->
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <h6 class="text-dark mb-3">
+                                    <i class="fas fa-database me-2"></i>Destination Database
+                                </h6>
+                                <form id="destinationSettingsForm" class="needs-validation" novalidate>
+                                    <div class="mb-3">
+                                        <label for="destHost" class="form-label">Host</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-server"></i></span>
+                                            <input type="text" id="destHost" name="host" class="form-control" required 
+                                                placeholder="Enter host (e.g., localhost)" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="destPort" class="form-label">Port</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-plug"></i></span>
+                                            <input type="text" id="destPort" name="port" class="form-control" required 
+                                                placeholder="Enter port (e.g., 5432)" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="destDbname" class="form-label">Database Name</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-database"></i></span>
+                                            <input type="text" id="destDbname" name="dbname" class="form-control" required 
+                                                placeholder="Enter database name" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="destUsername" class="form-label">Username</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                            <input type="text" id="destUsername" name="username" class="form-control" required 
+                                                placeholder="Enter username" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="destPassword" class="form-label">Password</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                            <input type="password" id="destPassword" name="password" class="form-control" required 
+                                                placeholder="Enter password" />
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary flex-grow-1">
+                                            <i class="fas fa-save me-2"></i>Save Destination DB
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" id="resetDestConfigBtn">
+                                            <i class="fas fa-redo me-2"></i>Reset
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="port" class="form-label">Port</label>
-            <input type="text" id="port" name="port" class="form-control" required placeholder="Enter port (e.g., 5432)" />
-        </div>
-        <div class="mb-3">
-            <label for="dbname" class="form-label">Database Name</label>
-            <input type="text" id="dbname" name="dbname" class="form-control" required placeholder="Enter database name" />
-        </div>
-        <div class="mb-3">
-            <label for="username" class="form-label">Username</label>
-            <input type="text" id="username" name="username" class="form-control" required placeholder="Enter username" />
-        </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" id="password" name="password" class="form-control" required placeholder="Enter password" />
-        </div>
-        <div class="d-flex">
-            <button type="submit" class="btn btn-primary">Save Settings</button>
-            <button type="button" class="btn btn-danger ms-2" id="resetConfigBtn">Reset Config</button>
-        </div>
-    </form>
+    </div>
 </div>
+
+<style>
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    padding: 1.25rem;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+.form-control {
+    border-left: none;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+}
+
+.input-group:focus-within {
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #009CFF;
+    border-color: #009CFF;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #009CFF;
+    border-color: #009CFF;
+    color: white;
+}
+
+.btn-outline-danger {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.border-end {
+    border-right: 1px solid #dee2e6;
+}
+
+@media (max-width: 768px) {
+    .border-end {
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+    }
+}
+</style>
 
 <script>
     function getQueryParams() {
@@ -41,24 +226,99 @@
     }
 
     $(document).ready(function () {
-        // ⬇️ Autofill the form if URL contains query params
-        const queryParams = getQueryParams();
-        if (queryParams.username) $("#username").val(queryParams.username);
-        if (queryParams.password) $("#password").val(queryParams.password);
-        if (queryParams.dbname) $("#dbname").val(queryParams.dbname);
-        if (queryParams.host) $("#host").val(queryParams.host);
-        if (queryParams.port) $("#port").val(queryParams.port);
+        // Form validation
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
 
-        // 🧾 Form Submit
-        $("#settingsForm").on("submit", function (e) {
+        // Autofill forms from URL params
+        const queryParams = getQueryParams();
+        
+        // Source DB form autofill
+        if (queryParams.sourceUsername) $("#sourceUsername").val(queryParams.sourceUsername);
+        if (queryParams.sourcePassword) $("#sourcePassword").val(queryParams.sourcePassword);
+        if (queryParams.sourceDbname) $("#sourceDbname").val(queryParams.sourceDbname);
+        if (queryParams.sourceHost) $("#sourceHost").val(queryParams.sourceHost);
+        if (queryParams.sourcePort) $("#sourcePort").val(queryParams.sourcePort);
+
+        // Destination DB form autofill
+        if (queryParams.destUsername) $("#destUsername").val(queryParams.destUsername);
+        if (queryParams.destPassword) $("#destPassword").val(queryParams.destPassword);
+        if (queryParams.destDbname) $("#destDbname").val(queryParams.destDbname);
+        if (queryParams.destHost) $("#destHost").val(queryParams.destHost);
+        if (queryParams.destPort) $("#destPort").val(queryParams.destPort);
+
+        // Source DB Form Submit
+        $("#sourceSettingsForm").on("submit", function (e) {
             e.preventDefault();
             const configData = {
-                username: $("#username").val(),
-                password: $("#password").val(),
-                dbName: $("#dbname").val(),
-                host: $("#host").val(),
-                port: $("#port").val()
+                username: $("#sourceUsername").val(),
+                password: $("#sourcePassword").val(),
+                dbName: $("#sourceDbname").val(),
+                host: $("#sourceHost").val(),
+                port: $("#sourcePort").val()
             };
+            
+            // Show loading state
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Validating...');
+
+            fetch("/api/config/validate-source", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(configData)
+            })
+            .then(response => response.text())
+            .then(msg => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: msg,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                // Clear form after successful validation
+                this.reset();
+                this.classList.remove('was-validated');
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Error validating source DB: ' + err
+                });
+            })
+            .finally(() => {
+                submitBtn.prop('disabled', false).html(originalText);
+            });
+        });
+
+        // Destination DB Form Submit
+        $("#destinationSettingsForm").on("submit", function (e) {
+            e.preventDefault();
+            const configData = {
+                username: $("#destUsername").val(),
+                password: $("#destPassword").val(),
+                dbName: $("#destDbname").val(),
+                host: $("#destHost").val(),
+                port: $("#destPort").val()
+            };
+
+            // Show loading state
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
+
             fetch("/api/config/create-db", {
                 method: "POST",
                 headers: {
@@ -67,17 +327,100 @@
                 body: JSON.stringify(configData)
             })
             .then(response => response.text())
-            .then(msg => alert("✅ " + msg))
-            .catch(err => alert("❌ Error saving config: " + err));
+            .then(msg => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: msg,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                // Clear form after successful save
+                this.reset();
+                this.classList.remove('was-validated');
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Error saving destination DB config: ' + err
+                });
+            })
+            .finally(() => {
+                submitBtn.prop('disabled', false).html(originalText);
+            });
         });
 
-        // 🧹 Reset Config
-        $("#resetConfigBtn").on("click", function () {
-            fetch("/api/config/reset-db", { method: "POST" })
-                .then(response => response.text())
-                .then(msg => Swal.fire({ icon: 'warning', title: 'Reset Config', text: msg }))
-                .catch(err => Swal.fire({ icon: 'error', title: 'Error', text: 'Error resetting config: ' + err }));
+        // Reset Source Config
+        $("#resetSourceConfigBtn").on("click", function () {
+            Swal.fire({
+                title: 'Reset Source Config?',
+                text: "This will clear all source database configuration.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, reset it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch("/api/config/reset-source", { method: "POST" })
+                        .then(response => response.text())
+                        .then(msg => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Reset Complete!',
+                                text: msg,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            $("#sourceSettingsForm")[0].reset();
+                            $("#sourceSettingsForm").removeClass('was-validated');
+                        })
+                        .catch(err => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Error resetting source config: ' + err
+                            });
+                        });
+                }
+            });
+        });
+
+        // Reset Destination Config
+        $("#resetDestConfigBtn").on("click", function () {
+            Swal.fire({
+                title: 'Reset Destination Config?',
+                text: "This will clear all destination database configuration.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, reset it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch("/api/config/reset-db", { method: "POST" })
+                        .then(response => response.text())
+                        .then(msg => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Reset Complete!',
+                                text: msg,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            $("#destinationSettingsForm")[0].reset();
+                            $("#destinationSettingsForm").removeClass('was-validated');
+                        })
+                        .catch(err => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Error resetting destination config: ' + err
+                            });
+                        });
+                }
+            });
         });
     });
-
 </script>
