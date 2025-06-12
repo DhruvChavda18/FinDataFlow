@@ -25,66 +25,41 @@ public class SourceDatabaseValidationService {
 
     public ValidationResult validateSourceDatabase(SourceDbConfig config) {
         logger.info("Starting source database validation for database: {}", config.getDbName());
+        List<String> missingTables = new ArrayList<>();
         
-        try {
-            // Step 1: Test connection to PostgreSQL server
-            String systemDb = "postgres";
-            String systemUrl = String.format("jdbc:postgresql://%s:%s/%s",
-                config.getHost(),
-                config.getPort(),
-                systemDb);
-
-            try (Connection conn = DriverManager.getConnection(systemUrl, config.getUsername(), config.getPassword())) {
-                logger.debug("Successfully connected to PostgreSQL server");
-                
-                // Step 2: Check if database exists
-                ResultSet rs = conn.getMetaData().getCatalogs();
-                boolean dbExists = false;
-                while (rs.next()) {
-                    if (rs.getString(1).equalsIgnoreCase(config.getDbName())) {
-                        dbExists = true;
-                        break;
-                    }
-                }
-                
-                if (!dbExists) {
-                    logger.warn("Database {} does not exist", config.getDbName());
-                    return new ValidationResult(false, "Database does not exist.");
-                }
-                
-                // Step 3: Connect to the specific database and check tables
-                String dbUrl = String.format("jdbc:postgresql://%s:%s/%s",
-                    config.getHost(),
-                    config.getPort(),
-                    config.getDbName());
-                
-                try (Connection dbConn = DriverManager.getConnection(dbUrl, config.getUsername(), config.getPassword())) {
-                    logger.debug("Successfully connected to database: {}", config.getDbName());
-                    
-                    // Check for required tables
-                    List<String> missingTables = new ArrayList<>();
-                    DatabaseMetaData metaData = dbConn.getMetaData();
-                    
-                    for (String tableName : REQUIRED_TABLES) {
-                        ResultSet tables = metaData.getTables(null, null, tableName, new String[]{"TABLE"});
-                        if (!tables.next()) {
-                            missingTables.add(tableName);
-                        }
-                    }
-                    
-                    if (!missingTables.isEmpty()) {
-                        String message = "Database exists, but required tables are missing: " + String.join(", ", missingTables);
-                        logger.warn(message);
-                        return new ValidationResult(false, message);
-                    }
-                    
-                    logger.info("Source database validation successful");
-                    return new ValidationResult(true, "Source database configuration is successful.");
+        try (Connection conn = DriverManager.getConnection(
+                String.format("jdbc:postgresql://%s:%s/%s", 
+                    config.getHost(), 
+                    config.getPort(), 
+                    config.getDbName()),
+                config.getUsername(),
+                config.getPassword())) {
+            
+            logger.debug("Successfully connected to source database");
+            DatabaseMetaData metaData = conn.getMetaData();
+            
+            for (String tableName : REQUIRED_TABLES) {
+                logger.debug("Checking for required table: {}", tableName);
+                ResultSet tables = metaData.getTables(null, "public", tableName, new String[]{"TABLE"});
+                if (!tables.next()) {
+                    logger.warn("Required table not found: {}", tableName);
+                    missingTables.add(tableName);
                 }
             }
+            
+            if (missingTables.isEmpty()) {
+                logger.info("Source database validation successful - all required tables present");
+                return new ValidationResult(true, "Source database validation successful");
+            } else {
+                String message = "Missing required tables: " + String.join(", ", missingTables);
+                logger.error("Source database validation failed: {}", message);
+                return new ValidationResult(false, message);
+            }
+            
         } catch (Exception e) {
-            logger.error("Source database validation failed: {}", e.getMessage(), e);
-            return new ValidationResult(false, "Connection failed. Please check your credentials or IP/port.");
+            String errorMessage = "Failed to validate source database: " + e.getMessage();
+            logger.error(errorMessage, e);
+            return new ValidationResult(false, errorMessage);
         }
     }
 

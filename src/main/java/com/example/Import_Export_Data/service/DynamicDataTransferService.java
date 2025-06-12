@@ -38,24 +38,30 @@ public class DynamicDataTransferService {
         DestinationDbConfig destConfig = temporaryDatabaseStore.get();
 
         if (sourceConfig == null) {
+            logger.error("Source database configuration not found");
             throw new IllegalStateException("Source database configuration not found.");
         }
         if (destConfig == null) {
+            logger.error("Destination database configuration not found");
             throw new IllegalStateException("Destination database configuration not found.");
         }
 
+        logger.debug("Creating dynamic EntityManagers for source and destination databases");
         // Create dynamic EntityManagers for source and destination
         DataSource sourceDataSource = dynamicDatabaseConfig.createDataSource(sourceConfig);
         EntityManagerFactory sourceEmf = dynamicDatabaseConfig.createEntityManagerFactory(sourceDataSource);
         EntityManager sourceEm = sourceEmf.createEntityManager();
+        logger.debug("Source EntityManager created successfully");
 
         DataSource destDataSource = dynamicDatabaseConfig.createDataSource(destConfig);
         EntityManagerFactory destEmf = dynamicDatabaseConfig.createEntityManagerFactory(destDataSource);
         EntityManager destEm = destEmf.createEntityManager();
-
-        destEm.getTransaction().begin();
+        logger.debug("Destination EntityManager created successfully");
 
         try {
+            logger.debug("Starting destination transaction");
+            destEm.getTransaction().begin();
+
             // 1. Fetch source MasterChart
             logger.debug("Fetching source MasterChart with ID: {}", sourceId);
             MasterChartOfAccount source = sourceEm.find(MasterChartOfAccount.class, sourceId);

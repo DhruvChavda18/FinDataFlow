@@ -14,7 +14,7 @@
         </encoder>
     </appender>
 
-    <!-- File Appender for all logs -->
+    <!-- File Appender for all logs except ERROR -->
     <appender name="File" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOGS}/${APP_NAME}.log</file>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -28,6 +28,12 @@
             <totalSizeCap>3GB</totalSizeCap>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
+        <!-- Filter out ERROR level logs -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+            <onMismatch>ACCEPT</onMismatch>
+        </filter>
     </appender>
 
     <!-- Error File Appender -->
@@ -37,8 +43,10 @@
             <pattern>${LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOGS}/archived/error-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
@@ -61,11 +69,15 @@
         <appender-ref ref="ErrorFile" />
     </appender>
 
+    <!-- Error Logger -->
+    <logger name="ERROR_LOGGER" level="ERROR" additivity="false">
+        <appender-ref ref="AsyncErrorFile" />
+    </logger>
+
     <!-- Application Loggers -->
     <logger name="com.example.Import_Export_Data" level="DEBUG" additivity="false">
         <appender-ref ref="Console" />
         <appender-ref ref="AsyncFile" />
-        <appender-ref ref="AsyncErrorFile" />
     </logger>
 
     <!-- Framework Loggers -->
@@ -83,6 +95,5 @@
     <root level="INFO">
         <appender-ref ref="Console" />
         <appender-ref ref="AsyncFile" />
-        <appender-ref ref="AsyncErrorFile" />
     </root>
 </configuration> 

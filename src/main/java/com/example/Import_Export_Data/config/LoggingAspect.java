@@ -19,26 +19,27 @@ import java.util.UUID;
 public class LoggingAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(LoggingAspect.class);
+    private static final Logger errorLogger = LoggerFactory.getLogger("ERROR_LOGGER");
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Controller logging (executed first)
-  @Around("execution(* com.example.Import_Export_Data..controller..*(..)) || " +
-        "execution(* com.example.Import_Export_Data..service..*(..)) || " +
-        "execution(* com.example.Import_Export_Data..repository..*(..))")
-public Object logApplicationLayers(ProceedingJoinPoint joinPoint) throws Throwable {
-    String packageName = joinPoint.getTarget().getClass().getPackageName();
-    String layer = "Unknown";
+    @Around("execution(* com.example.Import_Export_Data..controller..*(..)) || " +
+            "execution(* com.example.Import_Export_Data..service..*(..)) || " +
+            "execution(* com.example.Import_Export_Data..repository..*(..))")
+    public Object logApplicationLayers(ProceedingJoinPoint joinPoint) throws Throwable {
+        String packageName = joinPoint.getTarget().getClass().getPackageName();
+        String layer = "Unknown";
 
-    if (packageName.contains(".controller")) {
-        layer = "Controller";
-    } else if (packageName.contains(".service")) {
-        layer = "Service";
-    } else if (packageName.contains(".repository")) {
-        layer = "Repository";
+        if (packageName.contains(".controller")) {
+            layer = "Controller";
+        } else if (packageName.contains(".service")) {
+            layer = "Service";
+        } else if (packageName.contains(".repository")) {
+            layer = "Repository";
+        }
+
+        return log(joinPoint, layer);
     }
-
-    return log(joinPoint, layer);
-}
 
     // Common logging method
     private Object log(ProceedingJoinPoint joinPoint, String layerType) throws Throwable {
@@ -71,7 +72,7 @@ public Object logApplicationLayers(ProceedingJoinPoint joinPoint) throws Throwab
     }
 
     private void logMethodEntry(ProceedingJoinPoint joinPoint, MethodSignature signature,
-                                String methodName, String className, String layerType) {
+                              String methodName, String className, String layerType) {
         Object[] args = joinPoint.getArgs();
         String[] parameterNames = signature.getParameterNames();
         StringBuilder argsLog = new StringBuilder();
@@ -96,7 +97,7 @@ public Object logApplicationLayers(ProceedingJoinPoint joinPoint) throws Throwab
     }
 
     private void logMethodExit(String methodName, String className, Object result,
-                               Instant start, String layerType) {
+                             Instant start, String layerType) {
         Duration executionTime = Duration.between(start, Instant.now());
         try {
             String responseJson = result != null ? objectMapper.writeValueAsString(result) : "null";
@@ -110,10 +111,10 @@ public Object logApplicationLayers(ProceedingJoinPoint joinPoint) throws Throwab
 
     private void logException(String methodName, String className, Exception e) {
         if (e != null) {
-            logger.error("Exception in method: {}.{} - {}: {}", className, methodName,
+            errorLogger.error("Exception in method: {}.{} - {}: {}", className, methodName,
                     e.getClass().getSimpleName(), e.getMessage(), e);
         } else {
-            logger.error("Unknown exception in method: {}.{}", className, methodName);
+            errorLogger.error("Unknown exception in method: {}.{}", className, methodName);
         }
     }
 }
