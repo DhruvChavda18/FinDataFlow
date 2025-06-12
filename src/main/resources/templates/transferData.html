@@ -1,26 +1,312 @@
-<div class="container mt-5">
+<div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <h4 class="text-center mb-4">Transfer Data</h4>
-
-            <div id="alertBox" class="alert d-none" role="alert"></div>
-
-            <form id="transferForm">
-                <div class="mb-3">
-                    <label for="id" class="form-label">Enter ID:</label>
-                    <input type="number" class="form-control" id="id" name="id" placeholder="Enter ID" required>
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exchange-alt fa-2x text-primary me-3"></i>
+                        <div>
+                            <h5 class="mb-0 text-dark">Data Transfer</h5>
+                            <small class="text-muted">Transfer data between databases</small>
+                        </div>
+                    </div>
                 </div>
-                <div class="text-center">
-                    <button type="submit" class="btn btn-primary" id="transferButton">Transfer</button>
+                <div class="card-body">
+                    <!-- Alert Box -->
+                    <div id="alertBox" class="alert d-none mb-4" role="alert"></div>
+
+                    <!-- Transfer Form -->
+                    <form id="transferForm" class="needs-validation" novalidate>
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-hashtag"></i>
+                                </span>
+                                <input type="number" id="id" name="id" class="form-control" required
+                                    placeholder="Enter ID to transfer" min="1" />
+                                <div class="invalid-feedback">
+                                    Please enter a valid ID number.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Database Status Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-dark">
+                                            <i class="fas fa-database me-2"></i>Source Database
+                                        </h6>
+                                        <div id="sourceDbStatus" class="d-flex align-items-center">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <span>Checking status...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-dark">
+                                            <i class="fas fa-database me-2"></i>Destination Database
+                                        </h6>
+                                        <div id="destDbStatus" class="d-flex align-items-center">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <span>Checking status...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Transfer Button -->
+                        <div class="d-grid">
+                            <button type="submit" id="transferButton" class="btn btn-primary btn-lg">
+                                <i class="fas fa-exchange-alt me-2"></i>Transfer Data
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Loading Spinner -->
+                    <div id="spinner" class="text-center d-none mt-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Transferring data, please wait...</p>
+                    </div>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Optional Spinner -->
-<div id="spinner" class="d-none text-center mt-3">
-    <div class="spinner-border" role="status">
-        <span class="visually-hidden">Transferring...</span>
-    </div>
-</div>
+<style>
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    padding: 1.25rem;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+.form-control {
+    border-left: none;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+}
+
+.input-group:focus-within {
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #009CFF;
+    border-color: #009CFF;
+    color: white;
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.btn-primary:hover {
+    background-color: #009CFF;
+    border-color: #009CFF;
+    color: white;
+}
+
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+.alert-success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+.text-primary {
+    color: #009CFF !important;
+}
+
+.spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-width: 0.2em;
+}
+
+@media (max-width: 768px) {
+    .col-md-6:first-child {
+        margin-bottom: 1rem;
+    }
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.card-header h5 {
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.card-header small {
+    font-size: 0.875rem;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // Check database configurations
+    function checkDatabaseConfigs() {
+        Promise.all([
+            fetch('/api/config/is-configured').then(res => res.json()),
+            fetch('/api/transfer/is-source-configured').then(res => res.json())
+        ]).then(([isDestConfigured, isSourceConfigured]) => {
+            // Update source DB status
+            $('#sourceDbStatus').html(
+                isSourceConfigured 
+                    ? '<i class="fas fa-check-circle text-success me-2"></i>Configured'
+                    : '<i class="fas fa-times-circle text-danger me-2"></i>Not Configured'
+            );
+
+            // Update destination DB status
+            $('#destDbStatus').html(
+                isDestConfigured 
+                    ? '<i class="fas fa-check-circle text-success me-2"></i>Configured'
+                    : '<i class="fas fa-times-circle text-danger me-2"></i>Not Configured'
+            );
+
+            // Disable transfer button if either DB is not configured
+            if (!isDestConfigured || !isSourceConfigured) {
+                $('#transferButton').prop('disabled', true);
+                $('#alertBox')
+                    .removeClass('d-none alert-success alert-danger')
+                    .addClass('alert-warning')
+                    .html('<i class="fas fa-exclamation-triangle me-2"></i>Please configure both source and destination databases in Settings before transferring data.');
+            } else {
+                $('#transferButton').prop('disabled', false);
+                $('#alertBox').addClass('d-none');
+            }
+        }).catch(error => {
+            console.error('Error checking database configurations:', error);
+            $('#alertBox')
+                .removeClass('d-none alert-success alert-warning')
+                .addClass('alert-danger')
+                .html('<i class="fas fa-exclamation-circle me-2"></i>Error checking database configurations. Please try again.');
+        });
+    }
+
+    // Initial check
+    checkDatabaseConfigs();
+
+    // Form validation
+    const form = document.getElementById('transferForm');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    }, false);
+
+    // Handle form submission
+    $('#transferForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const id = $('#id').val();
+        if (!id) {
+            $('#alertBox')
+                .removeClass('d-none alert-success alert-warning')
+                .addClass('alert-danger')
+                .html('<i class="fas fa-exclamation-circle me-2"></i>Please enter an ID to transfer.');
+            return;
+        }
+
+        // Show loading state
+        $('#transferButton').prop('disabled', true).html(
+            '<span class="spinner-border spinner-border-sm me-2"></span>Transferring...'
+        );
+        $('#spinner').removeClass('d-none');
+        $('#alertBox').addClass('d-none');
+
+        // Make the transfer request
+        $.ajax({
+            url: '/api/transfer/dynamic-transfer/' + id,
+            method: 'POST',
+            success: function(response) {
+                $('#alertBox')
+                    .removeClass('d-none alert-danger alert-warning')
+                    .addClass('alert-success')
+                    .html('<i class="fas fa-check-circle me-2"></i>' + response)
+                    .fadeIn();
+
+                // Clear the input field
+                $('#id').val('');
+
+                // Auto-hide after 3 seconds
+                setTimeout(function() {
+                    $('#alertBox').fadeOut(function() {
+                        $(this).addClass('d-none');
+                    });
+                }, 3000);
+
+                // Remove validation class
+                $('#transferForm').removeClass('was-validated');
+            },
+            error: function(xhr, status, error) {
+                let errorMessage = 'Transfer failed: ' + (xhr.responseJSON?.message || xhr.responseText || error);
+                $('#alertBox')
+                    .removeClass('d-none alert-success alert-warning')
+                    .addClass('alert-danger')
+                    .html('<i class="fas fa-exclamation-circle me-2"></i>' + errorMessage);
+            },
+            complete: function() {
+                // Reset button and hide spinner
+                $('#transferButton')
+                    .prop('disabled', false)
+                    .html('<i class="fas fa-exchange-alt me-2"></i>Transfer Data');
+                $('#spinner').addClass('d-none');
+
+                // Remove validation class
+                $('#transferForm').removeClass('was-validated');
+            }
+        });
+    });
+});
+</script>
