@@ -8,6 +8,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -23,26 +24,20 @@ public class LoggingAspect {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Controller logging (executed first)
-    @Around("execution(* com.example.Import_Export_Data..controller..*(..)) || " +
-            "execution(* com.example.Import_Export_Data..service..*(..)) || " +
-            "execution(* com.example.Import_Export_Data..repository..*(..))")
-    public Object logApplicationLayers(ProceedingJoinPoint joinPoint) throws Throwable {
-        String packageName = joinPoint.getTarget().getClass().getPackageName();
-        String layer = "Unknown";
-
-        if (packageName.contains(".controller")) {
-            layer = "Controller";
-        } else if (packageName.contains(".service")) {
-            layer = "Service";
-        } else if (packageName.contains(".repository")) {
-            layer = "Repository";
-        }
-
-        return log(joinPoint, layer);
+    @Around("execution(* com.example.Import_Export_Data..controller..*(..))") 
+    @Order(1)
+    public Object logControllerLayer(ProceedingJoinPoint joinPoint) throws Throwable {
+        return logLayer(joinPoint, "Controller");
     }
-
-    // Common logging method
-    private Object log(ProceedingJoinPoint joinPoint, String layerType) throws Throwable {
+    
+    // Service logging (executed after controller)
+    @Around("execution(* com.example.Import_Export_Data..service..*(..))") 
+    @Order(2)
+    public Object logServiceLayer(ProceedingJoinPoint joinPoint) throws Throwable {
+        return logLayer(joinPoint, "Service");
+    }
+    // Common logging method for both layers
+    private Object logLayer(ProceedingJoinPoint joinPoint, String layerType) throws Throwable {
         if (joinPoint == null) return null;
 
         // Ensure traceId is available
@@ -93,7 +88,7 @@ public class LoggingAspect {
             }
         }
 
-        logger.debug("Entering [{}] method: {}.{} with arguments: {}", layerType, className, methodName, argsLog);
+        logger.info("[{}] ENTRY - {}.{}() - Args: {}", layerType, className, methodName, argsLog);
     }
 
     private void logMethodExit(String methodName, String className, Object result,
@@ -101,10 +96,10 @@ public class LoggingAspect {
         Duration executionTime = Duration.between(start, Instant.now());
         try {
             String responseJson = result != null ? objectMapper.writeValueAsString(result) : "null";
-            logger.debug("Exiting [{}] method: {}.{} with response: {} (execution time: {}ms)",
+            logger.info("[{}] EXIT - {}.{}() - Response: {} - Duration: {}ms",
                     layerType, className, methodName, responseJson, executionTime.toMillis());
         } catch (Exception e) {
-            logger.debug("Exiting [{}] method: {}.{} with response: {} (execution time: {}ms)",
+            logger.info("[{}] EXIT - {}.{}() - Response: {} - Duration: {}ms",
                     layerType, className, methodName, result, executionTime.toMillis());
         }
     }
