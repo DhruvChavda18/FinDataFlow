@@ -40,7 +40,7 @@ public class SourceDatabaseValidationService {
             
             for (String tableName : REQUIRED_TABLES) {
                 logger.debug("Checking for required table: {}", tableName);
-                ResultSet tables = metaData.getTables(null, "public", tableName, new String[]{"TABLE"});
+                ResultSet tables = metaData.getTables(null, "master", tableName, new String[]{"TABLE"});
                 if (!tables.next()) {
                     logger.warn("Required table not found: {}", tableName);
                     missingTables.add(tableName);

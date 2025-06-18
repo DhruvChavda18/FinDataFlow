@@ -761,59 +761,9 @@
         // Assume bindTransferButtonHandler and bindResetButtonHandler are defined elsewhere if needed
         // For now, I'll add simple placeholder functions to avoid errors
         function bindTransferButtonHandler() {
-            $('#transferForm').on('submit', function(e) {
-                e.preventDefault(); // Prevent default form submission
-
-                const id = $('#id').val();
-                if (!id) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Missing ID',
-                        text: 'Please enter an ID to transfer.'
-                    });
-                    return;
-                }
-
-                // Optional: Show a loading spinner or message
-                // showLoading(); // If you want to reuse the global spinner
-                // Or show the local spinner in transferData.html:
-                 $('#transferButton').prop('disabled', true).text('Transferring...');
-                 $('#spinner').removeClass('d-none');
-                 $('#alertBox').addClass('d-none').text(''); // Hide previous alerts
-
-                $.ajax({
-                    url: '/api/transfer/dynamic-transfer/' + id,
-                    method: 'POST',
-                    success: function(response) {
-                        $('#alertBox')
-                            .removeClass('alert-danger alert-warning')
-                            .addClass('alert-success')
-                            .text(response || 'Data transferred successfully!')
-                            .removeClass('d-none')
-                            .fadeIn();
-                        
-                        // Auto-hide after 3 seconds
-                        setTimeout(function() {
-                            $('#alertBox').fadeOut(function() {
-                                $(this).addClass('d-none');
-                            });
-                        }, 3000);
-                    },
-                    error: function(xhr, status, error) {
-                        let errorMessage = 'Transfer failed: ' + (xhr.responseJSON?.message || xhr.responseText || error);
-                        $('#alertBox')
-                            .removeClass('alert-success alert-warning')
-                            .addClass('alert-danger')
-                            .text(errorMessage)
-                            .removeClass('d-none');
-                    },
-                    complete: function() {
-                        // Hide loading spinner and re-enable button
-                         $('#transferButton').prop('disabled', false).text('Transfer');
-                         $('#spinner').addClass('d-none');
-                    }
-                });
-            });
+            // The transfer form already has its own event handler in transferData.html
+            // No need to add another one here to avoid duplicate requests
+            console.log("Transfer button handler is already bound in transferData.html");
         }
 
         function bindResetButtonHandler() {

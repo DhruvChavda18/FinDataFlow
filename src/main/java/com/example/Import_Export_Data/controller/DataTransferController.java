@@ -26,7 +26,9 @@ public class DataTransferController {
 
     @PostMapping("/dynamic-transfer/{id}")
     public ResponseEntity<String> transferToDynamicDb(@PathVariable Integer id) {
+        logger.info("=== TRANSFER REQUEST STARTED ===");
         logger.info("Received dynamic transfer request for ID: {}", id);
+        logger.info("Request timestamp: {}", System.currentTimeMillis());
         
         if (!temporaryDatabaseStore.isAvailable()) {
             logger.warn("Dynamic transfer failed: No database configuration found");
@@ -38,10 +40,12 @@ public class DataTransferController {
             logger.debug("Retrieved database configuration for transfer");
             
             dynamicDataTransferService.transferToDynamicDestination(id);
+            logger.info("=== TRANSFER REQUEST COMPLETED SUCCESSFULLY ===");
             logger.info("Data transfer completed successfully for ID: {}", id);
             
             return ResponseEntity.ok("Data transferred to dynamic DB successfully!");
         } catch (Exception e) {
+            logger.error("=== TRANSFER REQUEST FAILED ===");
             logger.error("Data transfer failed for ID: {} - Error: {}", id, e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Transfer failed: " + e.getMessage());
         }

@@ -192,6 +192,9 @@
 
 <script>
 $(document).ready(function() {
+    // Flag to prevent multiple simultaneous requests
+    let isTransferInProgress = false;
+    
     // Check database configurations
     function checkDatabaseConfigs() {
         Promise.all([
@@ -249,6 +252,12 @@ $(document).ready(function() {
     $('#transferForm').on('submit', function(e) {
         e.preventDefault();
 
+        // Prevent multiple simultaneous requests
+        if (isTransferInProgress) {
+            console.log('Transfer already in progress, ignoring duplicate request');
+            return;
+        }
+
         const id = $('#id').val();
         if (!id) {
             $('#alertBox')
@@ -257,6 +266,9 @@ $(document).ready(function() {
                 .html('<i class="fas fa-exclamation-circle me-2"></i>Please enter an ID to transfer.');
             return;
         }
+
+        // Set transfer in progress flag
+        isTransferInProgress = true;
 
         // Show loading state
         $('#transferButton').prop('disabled', true).html(
@@ -297,6 +309,9 @@ $(document).ready(function() {
                     .html('<i class="fas fa-exclamation-circle me-2"></i>' + errorMessage);
             },
             complete: function() {
+                // Reset transfer in progress flag
+                isTransferInProgress = false;
+                
                 // Reset button and hide spinner
                 $('#transferButton')
                     .prop('disabled', false)

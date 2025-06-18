@@ -29,7 +29,6 @@ public class DynamicDataTransferService {
     @Autowired
     private TemporaryDatabaseStore temporaryDatabaseStore;
 
-    @Transactional
     public void transferToDynamicDestination(Integer sourceId) throws Exception {
         logger.info("Starting dynamic data transfer for source ID: {}", sourceId);
 
