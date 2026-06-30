@@ -19,9 +19,6 @@ public class DatabaseConfigController {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseConfigController.class);
 
     @Autowired
-    private DatabaseCreationService databaseCreationService;
-
-    @Autowired
     private TemporaryDatabaseStore temporaryDatabaseStore;
 
     @Autowired
@@ -32,26 +29,23 @@ public class DatabaseConfigController {
 
     @PostMapping("/create-db")
     public ResponseEntity<String> createDatabase(@RequestBody DestinationDbConfig config) {
-        logger.info("Received database creation request for database: {}", config.getDbName());
-        logger.debug("Database configuration details: username={}", config.getUsername());
+        logger.info("Received destination database validation request for database: {}", config.getDbName());
         
         try {
-            boolean created = databaseCreationService.createDatabase(config);
-            logger.debug("Database creation status: {}", created ? "created" : "already exists");
-
-            // Always save the config — even if DB already exists
-            temporaryDatabaseStore.save(config);
-            logger.debug("Database configuration saved to temporary store");
-
-            if (created) {
-                logger.info("New database created and configuration saved successfully");
-                return ResponseEntity.ok("✅ New database created and configuration saved successfully.");
+            SourceDatabaseValidationService.ValidationResult validationResult =
+                    sourceDatabaseValidationService.validateDestinationDatabase(config);
+            
+            if (validationResult.isSuccess()) {
+                // Save the configuration if validation is successful
+                temporaryDatabaseStore.save(config);
+                logger.info("Destination database configuration validated and saved successfully");
+                return ResponseEntity.ok("✅ " + validationResult.getMessage());
             } else {
-                logger.info("Database configuration saved with existing database");
-                return ResponseEntity.ok("✅ Database configuration details saved successfully with existing DB name.");
+                logger.warn("Destination database validation failed: {}", validationResult.getMessage());
+                return ResponseEntity.badRequest().body("❌ " + validationResult.getMessage());
             }
         } catch (Exception e) {
-            logger.error("Error creating database: ", e);
+            logger.error("Error validating destination database: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("❌ Error: " + e.getMessage());
         }

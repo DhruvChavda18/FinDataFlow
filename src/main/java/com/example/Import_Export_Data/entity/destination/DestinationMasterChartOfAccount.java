@@ -1,10 +1,10 @@
-package com.example.Import_Export_Data.entity.destination;
+  package com.example.Import_Export_Data.entity.destination;
 
 
 import com.example.Import_Export_Data.entity.source.MasterChartOfAccount;
 import jakarta.persistence.*;
 
-import java.sql.Time;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "master_chart_of_account", schema = "master")
@@ -21,9 +21,9 @@ public class DestinationMasterChartOfAccount {
     @Column(name = "is_deleted")
     private Boolean isDeleted;
     private Boolean is_default;
-    private Time created_date;
+    private LocalDateTime created_date;
     private Integer created_by;
-    private Time updated_date;
+    private LocalDateTime updated_date;
     private Integer updated_by;
     private Boolean is_active;
     private Integer status_id;
@@ -37,7 +37,7 @@ public class DestinationMasterChartOfAccount {
     public DestinationMasterChartOfAccount() {
     }
 
-    public DestinationMasterChartOfAccount(Integer id, String chartOfAccountName, String description, String p_version, Integer prev_chart_of_account_id, Integer industry_id, Boolean isDeleted, Boolean is_default, Time created_date, Integer created_by, Time updated_date, Integer updated_by, Boolean is_active, Integer status_id, Boolean is_versioning, Boolean is_copy_chartofaccount, Integer countryId, Boolean isSubstantialChange) {
+    public DestinationMasterChartOfAccount(Integer id, String chartOfAccountName, String description, String p_version, Integer prev_chart_of_account_id, Integer industry_id, Boolean isDeleted, Boolean is_default, LocalDateTime created_date, Integer created_by, LocalDateTime updated_date, Integer updated_by, Boolean is_active, Integer status_id, Boolean is_versioning, Boolean is_copy_chartofaccount, Integer countryId, Boolean isSubstantialChange) {
         this.id = id;
         this.chartOfAccountName = chartOfAccountName;
         this.description = description;
@@ -143,11 +143,11 @@ public class DestinationMasterChartOfAccount {
         this.is_default = is_default;
     }
 
-    public Time getCreated_date() {
+    public LocalDateTime getCreated_date() {
         return created_date;
     }
 
-    public void setCreated_date(Time created_date) {
+    public void setCreated_date(LocalDateTime created_date) {
         this.created_date = created_date;
     }
 
@@ -159,11 +159,11 @@ public class DestinationMasterChartOfAccount {
         this.created_by = created_by;
     }
 
-    public Time getUpdated_date() {
+    public LocalDateTime getUpdated_date() {
         return updated_date;
     }
 
-    public void setUpdated_date(Time updated_date) {
+    public void setUpdated_date(LocalDateTime updated_date) {
         this.updated_date = updated_date;
     }
 

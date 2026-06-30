@@ -1,7 +1,7 @@
 package com.example.Import_Export_Data.entity.source;
 import jakarta.persistence.*;
 
-import java.sql.Time;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "account_production_master_tables", schema = "master")
@@ -43,13 +43,13 @@ public class AccountProductionMasterTable {
     private Integer createdBy;
 
     @Column(name = "created_date")
-    private Time createdDate;
+    private LocalDateTime createdDate;
 
     @Column(name = "updated_by")
     private Integer updatedBy;
 
     @Column(name = "updated_date")
-    private Time updatedDate;
+    private LocalDateTime updatedDate;
 
     @Column(name = "ap_version")
     private Integer apVersion;
@@ -75,7 +75,7 @@ public class AccountProductionMasterTable {
     public AccountProductionMasterTable() {
     }
 
-    public AccountProductionMasterTable(Integer id, String menuName, Integer masterSectionId, Integer masterChartOfAccountId, Integer subSectionId, String tableJson, Integer referenceId, Boolean isEditable, Boolean isActive, Boolean isDeleted, Integer createdBy, Time createdDate, Integer updatedBy, Time updatedDate, Integer apVersion, Integer headerType, String checklistQuestionReference, Integer sequenceNumber, Integer fsaAreaId, Integer originalTableId, Boolean isCkeditorCheck) {
+    public AccountProductionMasterTable(Integer id, String menuName, Integer masterSectionId, Integer masterChartOfAccountId, Integer subSectionId, String tableJson, Integer referenceId, Boolean isEditable, Boolean isActive, Boolean isDeleted, Integer createdBy, LocalDateTime createdDate, Integer updatedBy, LocalDateTime updatedDate, Integer apVersion, Integer headerType, String checklistQuestionReference, Integer sequenceNumber, Integer fsaAreaId, Integer originalTableId, Boolean isCkeditorCheck) {
         this.id = id;
         this.menuName = menuName;
         this.masterSectionId = masterSectionId;
@@ -187,11 +187,11 @@ public class AccountProductionMasterTable {
         this.createdBy = createdBy;
     }
 
-    public Time getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Time createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
@@ -203,11 +203,11 @@ public class AccountProductionMasterTable {
         this.updatedBy = updatedBy;
     }
 
-    public Time getUpdatedDate() {
+    public LocalDateTime getUpdatedDate() {
         return updatedDate;
     }
 
-    public void setUpdatedDate(Time updatedDate) {
+    public void setUpdatedDate(LocalDateTime updatedDate) {
         this.updatedDate = updatedDate;
     }
 

@@ -52,7 +52,7 @@ public class DynamicDatabaseConfig {
 
         Map<String, Object> jpaProps = new HashMap<>();
         jpaProps.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
-        jpaProps.put("hibernate.hbm2ddl.auto", "update");
+        jpaProps.put("hibernate.hbm2ddl.auto", "none");
 
         factory.setJpaPropertyMap(jpaProps);
         factory.afterPropertiesSet();

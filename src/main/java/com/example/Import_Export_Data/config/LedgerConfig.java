@@ -18,7 +18,7 @@ import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
-@Configuration
+// @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
         basePackages = "com.example.Import_Export_Data.repository.ledgerRepo",  // ✅ change if your repo is elsewhere

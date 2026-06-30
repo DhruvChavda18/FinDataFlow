@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@Controller
+// @Controller
 @RequestMapping()
 public class LedgerController {
     private static final Logger logger = LoggerFactory.getLogger(LedgerController.class);

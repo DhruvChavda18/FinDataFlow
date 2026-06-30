@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.sql.Timestamp;
 
-@Service
+// @Service
 public class LedgerService {
     private static final Logger logger = LoggerFactory.getLogger(LedgerService.class);
     private final LedgerRepository ledgerRepository;

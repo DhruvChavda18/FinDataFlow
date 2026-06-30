@@ -4,7 +4,7 @@ package com.example.Import_Export_Data.entity.destination;
 import com.example.Import_Export_Data.entity.source.AccountProductionSubSections;
 import jakarta.persistence.*;
 
-import java.sql.Time;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "account_production_sub_sections", schema = "master")
@@ -42,13 +42,13 @@ public class DestinationAccountProductionSubSections {
     private Integer createdBy;
 
     @Column(name = "created_date")
-    private Time createdDate;
+    private LocalDateTime createdDate;
 
     @Column(name = "updated_by")
     private Integer updatedBy;
 
     @Column(name = "updated_date")
-    private Time updatedDate;
+    private LocalDateTime updatedDate;
 
     @Column(name = "ap_version")
     private Integer apVersion;
@@ -93,7 +93,7 @@ public class DestinationAccountProductionSubSections {
     }
 
 
-    public DestinationAccountProductionSubSections(Integer id, String menuName, Integer masterSectionId, Integer masterChartOfAccountId, Integer serialNumber, Integer menuType, Boolean isEditable, Boolean isActive, Boolean isDeleted, Integer createdBy, Time createdDate, Integer updatedBy, Time updatedDate, Integer apVersion, String aliasName, Boolean isLoader, String sectionSequence, Integer cashFlowType, Integer originalSubSectionId) {
+    public DestinationAccountProductionSubSections(Integer id, String menuName, Integer masterSectionId, Integer masterChartOfAccountId, Integer serialNumber, Integer menuType, Boolean isEditable, Boolean isActive, Boolean isDeleted, Integer createdBy, LocalDateTime createdDate, Integer updatedBy, LocalDateTime updatedDate, Integer apVersion, String aliasName, Boolean isLoader, String sectionSequence, Integer cashFlowType, Integer originalSubSectionId) {
         this.id = id;
         this.menuName = menuName;
         this.masterSectionId = masterSectionId;
@@ -195,11 +195,11 @@ public class DestinationAccountProductionSubSections {
         this.createdBy = createdBy;
     }
 
-    public Time getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Time createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
@@ -211,11 +211,11 @@ public class DestinationAccountProductionSubSections {
         this.updatedBy = updatedBy;
     }
 
-    public Time getUpdatedDate() {
+    public LocalDateTime getUpdatedDate() {
         return updatedDate;
     }
 
-    public void setUpdatedDate(Time updatedDate) {
+    public void setUpdatedDate(LocalDateTime updatedDate) {
         this.updatedDate = updatedDate;
     }
 
